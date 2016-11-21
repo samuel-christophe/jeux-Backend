@@ -1,0 +1,51 @@
+doctype html
+html
+  head
+    meta(charset='utf-8')
+    title start
+    link(rel='stylesheet', href='css/master.css', media='screen', title='no title')
+    link(rel='stylesheet', href='css/intro.css', media='screen', title='no title')
+    script(type='text/javascript', src='https://cdn.socket.io/socket.io-1.4.5.js')
+      // Chargement du "framework" client socket.io
+    script(type='text/javascript', src='js/start.js')
+    //- script(type='text/javascript', src='js/clickdroit.js')
+  body
+    .jeux
+      ul#navigation
+        li
+          a(href='/regles') Lire les régles
+      .div.text
+        ul
+          li nombre de joueur en ligne #{nbJoueur}
+          li Choisissait un personnage
+          li Un joueur doit jouer le famtome
+          li Le famtome choisi la dificulté
+          li Pour une 1ère partie, nous conseillons
+          li qu’un joueur déjà familiarisé avec le
+          li jeu incarne le fantôme, et de jouer
+          li avec un niveau de difficulté FACILE
+      .div
+        img(src='image/start/personnage.jpg', alt='')
+        .image.characterOne.couper
+          a(href='/one')
+            img.image(src='image/start/personnages.png', alt='')
+        .image.characterTwo.couper
+          a(href='/two')
+            img.image.characterTwo(src='image/start/personnages.png', alt='')
+        .image.characterThree.couper
+          a(href='/three')
+            img.image.characterThree(src='image/start/personnages.png', alt='')
+        .image.characterFour.couper
+          a(href='/four')
+            img.image.characterFour(src='image/start/personnages.png', alt='')
+        .image.characterFive.couper
+          a(href='/five')
+            img.image.characterFive(src='image/start/personnages.png', alt='')
+        .image.characterSix.couper
+          a(href='/six')
+            img.image.characterSix(src='image/start/personnages.png', alt='')
+      .div
+        a(href='/fantom')
+          img(src='image/start/mort.jpg', alt='')
+      form#deconnection.start(action='/start', method='get')
+        input#exit(type='submit', value='deconnection')

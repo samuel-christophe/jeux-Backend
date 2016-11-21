@@ -1,0 +1,238 @@
+
+ol, ul {
+    list-style: outside none none;
+}
+a, article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+a, li {
+    background: grey none repeat scroll 0 0;
+    color: #fff;
+}
+section, ul {
+    width: 100%;
+}
+#backgroundFirst, #carac, #circle, #circleView, #commande, #competences, #heart0, #heart1, #heart2, #heart3, #heart4, #heart5, #jeux, #life0, #life1, #life2, #life3, #life4, #limitePersonnage, #objet, #shadow, #spriteLink, #spriteObjet, #spriteShadow, #text, #view, #win {
+    position: absolute;
+}
+#commande, #objet, #show, #view, #win {
+    z-index: 2;
+}
+#carac, #circleView, #jeux, #life0, #life1, #life2, #life3, #life4, #life5, #objet, #shadow, #show, #view {
+    overflow: hidden;
+}
+#competence1, #competence2, #competence3 {
+    height: 98px;
+    width: 87px;
+}
+a, abbr, acronym, address, applet, article, aside, audio, b, big, blockquote, body, canvas, caption, center, cite, code, dd, del, details, dfn, div, dl, dt, em, embed, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup, html, i, iframe, img, ins, kbd, label, legend, li, mark, menu, nav, object, ol, output, p, pre, q, ruby, s, samp, section, small, span, strike, strong, sub, summary, sup, table, tbody, td, tfoot, th, thead, time, tr, tt, u, ul, var, video {
+    border: medium none;
+    font: inherit;
+    margin: 0;
+    padding: 0;
+    vertical-align: baseline;
+}
+body {
+    line-height: 1;
+    background-color: black;
+}
+blockquote, q {
+    quotes: none;
+}
+blockquote::after, blockquote::before, q::after, q::before {
+    content: none;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+
+.div{
+  position:relative;
+  float: left;
+  margin-top: 3px;
+  margin-left: 3px;
+}
+.couper{
+  overflow: hidden;
+}
+.intro{
+  width: 100%;
+  height: 100%;
+}
+.petite{
+  height: 624px;
+  top: 180px;
+}
+.image{
+  position: absolute;
+}
+.point{
+  height: 725px;
+  width: 427px;
+}
+.pointInt{
+  /*transform: scale(0.75);*/
+  overflow: hidden;
+  margin-top: 163px;
+  height: 440px;
+  width: 208px;
+}
+.point4{
+	left: -580px;
+	top: -385px;
+}
+.point6{
+  left: -788px;
+  top: -385px;
+  z-index: -1;
+}
+.heure{
+	width: 250px;
+	height: 308px;
+}
+.horloge{
+  position: absolute;
+	top: -545px;
+	left: -20px;
+}
+.aiguille{
+  left: -269px;
+  top: -847px;
+}
+.jeux{
+  width: 100%;
+  height: 100%;
+}
+.background{
+  filter: blur(3px);
+  left: -350px;
+  height: 100%;
+  z-index: -1;
+}
+.positionJoueur{
+  top: 50px;
+	width: 126px;
+	height: 635px;
+}
+.position{
+	width: 1900px;
+}
+.perso{
+  position: absolute;
+}
+.lieu{
+  position: absolute;
+  left: -130px;
+}
+.objet{
+  position: absolute;
+  left: -261px;
+}
+.centre{
+  top:15%;
+}
+.carteGrande{
+  width: 248px;
+  height: 163px;
+  position: relative;
+}
+.cartePetite{
+  width: 74px;
+  height: 53px;
+  position: relative;
+}
+.carteObjet{
+  left: -1270px;
+  top: -107px;
+}
+.cartePersonnage{
+  left: -762px;
+  top: -507px;
+}
+.carteLieu{
+  left: 0px;
+  top: 0px;
+}
+.avatar{
+  width: 100%;
+  height: 10%;
+}
+.voyant{
+	width: 16.2%;
+	height: 152px;
+}
+.etuit{
+  margin-top: 33px;
+	width: 128px;
+	height: 119px;
+}
+#joueurMauve{
+  left: -463px;
+}
+#joueurJaune{
+  left: -463px;
+  top: -122px;
+}
+#joueurBleu{
+  left: -463px;
+  top: -245px;
+}
+#joueurNoir{
+  left: -595px;
+}
+#joueurRouge{
+  left: -595px;
+  top: -122px;
+}
+#joueurBlanc{
+  left: -595px;
+  top: -245px;
+}
+/*point*/
+.pointCouleurDiv{
+  margin-top: 163px;
+  height: 980px;
+  width: 980px;
+  left: -555px;
+  top: -275px;
+}
+.pointImage{
+  left: 490px;
+  height: 40px;
+  width: 42px;
+}
+#carreJoueurUn{
+  transform: rotate(39deg);
+}
+#carreJoueurDeux{
+  transform: rotate(39deg);
+}
+#pointJoueurUn{
+  top: 200px;
+}
+#pointJoueurDeux{
+  top: 160px;
+}
+#carreJoueurTrois{
+  transform: rotate(39deg);
+}
+#carreJoueurQuatre{
+  transform: rotate(39deg);
+}
+#pointJoueurTrois{
+  top: 120px;
+}
+#pointJoueurQuatre{
+  top: 80px;
+}
+#carreJoueurCinq{
+  transform: rotate(39deg);
+}
+#carreJoueurSix{
+  transform: rotate(39deg);
+}
+#pointJoueurCinq{
+  top: 40px;
+}

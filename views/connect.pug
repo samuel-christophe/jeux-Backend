@@ -1,0 +1,67 @@
+doctype html
+html
+  head
+    meta(charset='utf-8')
+    title jeux backend
+    link(rel='stylesheet', href='css/master.css', media='screen', title='no title')
+    link(rel='stylesheet', href='css/intro.css', media='screen', title='no title')
+    // Chargement du "framework" client socket.io
+    script(type='text/javascript', src='https://cdn.socket.io/socket.io-1.4.5.js')
+    script(type='text/javascript', src='js/clickdroit.js')
+    script(type='text/javascript', src='js/client.js')
+  body
+    .jeux
+      img.intro.connect(src='image/start/intro.jpg', alt='')
+      ul#navigation
+        li
+          a(href='/regles') Lire les régles
+      form#connection.connect.image(action='', method='get')
+        label pseudo
+        br
+        input#pseudo(type='text', name='pseudo')
+        br
+        input(type='submit', value='connection')
+      #textAffiche.div.text.start
+        ul#difficult
+          li nombre de joueur en ligne
+          li Choisissait un personnage
+          li Un joueur doit jouer le famtome
+          li Le famtome choisi la dificulté
+          li Pour une 1ère partie, nous conseillons
+          li qu’un joueur déjà familiarisé avec le
+          li jeu incarne le fantôme, et de jouer
+          li avec un niveau de difficulté FACILE
+          br
+        form#send.start(action='', method='get')
+          label message
+          br
+          input#message(type='text', name='pseudo')
+          br
+          input(type='submit', value='connection')
+        br
+        #chat
+      .div.start
+        img(src='image/start/personnage.jpg', alt='')
+        .image.characterOne.couper
+          a(href='1')
+            img.image(src='image/start/personnages.png', alt='')
+        .image.characterTwo.couper
+          a(href='2')
+            img.image.characterTwo(src='image/start/personnages.png', alt='')
+        .image.characterThree.couper
+          a(href='3')
+            img.image.characterThree(src='image/start/personnages.png', alt='')
+        .image.characterFour.couper
+          a(href='4')
+            img.image.characterFour(src='image/start/personnages.png', alt='')
+        .image.characterFive.couper
+          a(href='5')
+            img.image.characterFive(src='image/start/personnages.png', alt='')
+        .image.characterSix.couper
+          a(href='6')
+            img.image.characterSix(src='image/start/personnages.png', alt='')
+      .div.start
+        a(href='fantom')
+          img(src='image/start/mort.jpg', alt='')
+      form#deconnection.start.image(action='', method='get')
+        input#exit(type='submit', value='deconnection')
