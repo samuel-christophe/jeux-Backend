@@ -2,7 +2,8 @@
   //Au chargement du document
   window.addEventListener('DOMContentLoaded',() => {
 
-    var room, username, numPlayer, facileLI, moyenLI, difficileLI;
+    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, nbPlayer, cartes;
+    var playerListe = [];
     /**
       Établissement d'une nouvelle connexion WebSocket vers le serveur
       WebSocket à l'aide de la fonction io fournie par le "framework"
@@ -14,10 +15,12 @@
 
     var send = window.document.getElementById('send');
     var chat = window.document.getElementById('chat');
+    var jeux = window.document.getElementById('jeux');
     var pseudo = window.document.getElementById('pseudo');
     var message = window.document.getElementById('message');
     var difficult = window.document.getElementById('difficult');
     var start = window.document.getElementsByClassName('start');
+    var debut = window.document.getElementsByClassName('debut');
     var HTMLaElement = window.document.getElementsByTagName('a');
     var navigation = window.document.getElementById('navigation');
     var connection = window.document.getElementById('connection');
@@ -26,6 +29,23 @@
     var deconnection = window.document.getElementById('deconnection');
 
     var niveau = ['facile', 'moyen', 'difficile'];
+
+    var spriteCarte = document.createElement('img');
+    spriteCarte.src='image/sprite carte.png';
+    spriteCarte.addEventListener('load', (event) => {
+    });
+    var plateau = document.createElement('img');
+    plateau.src='image/plateau.png';
+    plateau.addEventListener('load', (event) => {
+    });
+    var plateauFantom = document.createElement('img');
+    plateauFantom.src='image/sprite plateau fantom.png';
+    plateauFantom.addEventListener('load', (event) => {
+    });
+    var ecran = document.createElement('img');
+    ecran.src='image/ecran/ecran.jpg';
+    ecran.addEventListener('load', (event) => {
+    });
 
     connection.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -52,9 +72,25 @@
       A chaque message reçu, on affiche les données
       obtenues dans la console du navigateur Internet.
       **/
+      console.log(data);
+      cartes = data.cartes;
       room = data.room;
       numPlayer = data.numPlayer;
+      perso = data.joue;
+      nbPlayer = data.nbPlayer;
+
+      //enregistre les joueurs
+      if ( data.playerListe ) {
+        for (var i = 1; i <= nbPlayer; i++) {
+          if (data.playerListe[i]) {
+            playerListe[i] = data.playerListe[i].joue;
+          }
+        }
+      }
+
       socket.emit('room', room);
+
+      //supprime les élément de connexion
       for (var i = 0; i < start.length; i) {
         start[i].classList.remove('start');
       };
@@ -75,13 +111,7 @@
 
       //vérifie si la partie à déjà commencé
       if (data.start) {
-        //supression des éléments innutils
-        difficult.parentNode.removeChild(difficult);
-
-        //nav et send à déplacer
-        navigation.style.top = '900px';
-        textAffiche.classList.remove('div');
-        textAffiche.classList.add('textAffiche');
+        debutPartie();
       }
 
     });
@@ -97,6 +127,7 @@
       HTMLaElement[i].addEventListener('click', function (event) {
         event.preventDefault();
         var status = this.getAttribute('href');
+        perso = status;
         if (status != '/regles'){
           /**
           A chaque clic de souris sur l'élément HTML considéré
@@ -190,19 +221,13 @@
               addChat(data.username + ' à selectionner un personnage.');
             }
           }
+          playerListe[data.numPlayer] = data.perso;
         } else {
           addChat(data.username + ' à selectionner un personnage. vous devez selectionner le fantome en premier');
         }
         //début de la partie
         if (data.start){
-          console.log('la partie commence');
-          //supression des éléments innutils
-          difficult.parentNode.removeChild(difficult);
-
-          //nav et send à déplacer
-          navigation.style.top = '900px';
-          textAffiche.classList.remove('div');
-          textAffiche.classList.add('textAffiche');
+          debutPartie ();
         }
       }
     });
@@ -231,13 +256,7 @@
       }
       //début de la partie
       if (data.start){
-        //supression des éléments innutils
-        difficult.parentNode.removeChild(difficult);
-
-        //nav et send à déplacer
-        navigation.style.top = '900px';
-        textAffiche.classList.remove('div');
-        textAffiche.classList.add('textAffiche');
+        debutPartie ();
       }
     });
 
@@ -259,6 +278,188 @@
       addChat('vous avez selectionné la difficultée : ' + niveau[level - 1]);
     };
 
+    function debutPartie (){
+
+      //supression des éléments innutils
+      difficult.parentNode.removeChild(difficult);
+
+      for (var i = 0; i < debut.length; i) {
+        debut[i].parentNode.removeChild(debut[0]);
+      }
+
+      //nav et send à déplacer
+      navigation.style.top = '900px';
+      textAffiche.classList.remove('div');
+      textAffiche.classList.add('textAffiche');
+      ecran.classList.add('image', 'background');
+      jeux.appendChild(ecran);
+
+      //si le joueur joue le fantom
+      if (perso == 'fantom') {
+        var div = document.createElement('div');
+        var heure = document.createElement('div');
+        var position = document.createElement('div');
+        var horloge = document.createElement('img');
+        heure.classList.add('div', 'heure', 'couper');
+        position.classList.add('position');
+        horloge.classList.add('horloge');
+        horloge.src = 'image/plateau.png';
+        heure.appendChild(horloge);
+        position.appendChild(heure);
+        jeux.insertBefore(position, ecran);
+        div.classList.add('avatar');
+        var j = 0;
+        for (var i = 1; i <= nbPlayer; i++) {
+          if (i != numPlayer) {
+            avatar(div, playerListe[i], j);
+            j++;
+          }
+        }
+        jeux.insertBefore(div, navigation);
+
+      } else {
+      }
+    }
+
+    //ajoute l'avatar pour le fantom
+    function avatar (div, numPlayer, numCartes) {
+      //créeation des éléments et ajout des cartes
+      var voyant = document.createElement('div');
+      var jeton = document.createElement('div');
+      var image = document.createElement('img');
+      var persoPetit = document.createElement('img');
+      var persoGrand = document.createElement('img');
+      var lieuxPetit = document.createElement('img');
+      var lieuxGrand = document.createElement('img');
+      var objetPetit = document.createElement('img');
+      var objetGrand = document.createElement('img');
+      var perso = document.createElement('div');
+      var lieux = document.createElement('div');
+      var objet = document.createElement('div');
+
+      //ajout des src
+      persoPetit.src = 'image/sprite carte.png';
+      lieuxPetit.src = 'image/sprite carte.png';
+      objetPetit.src = 'image/sprite carte.png';
+      console.log(numCartes);
+      console.log(cartes.personnages[numCartes]);
+      persoGrand.src = 'image/carte personnage/' + cartes.personnages[numCartes].src;
+      lieuxGrand.src = 'image/cartes lieu/' + cartes.cartesLieux[numCartes].src;
+      objetGrand.src = 'image/carte objet/' + cartes.cartesObjet[numCartes].src;
+      image.src = 'image/sprite plateau fantom.png';
+
+      //ajout des class
+      persoPetit.classList.add('image');
+      lieuxPetit.classList.add('image');
+      objetPetit.classList.add('image');
+      persoGrand.classList.add('image', 'start');
+      lieuxGrand.classList.add('image', 'start');
+      objetGrand.classList.add('image', 'start');
+      perso.classList.add('couper');
+      lieux.classList.add('couper');
+      objet.classList.add('couper');
+      image.classList.add('image', joueur[numPlayer -1]);
+      jeton.classList.add('div', 'jetonFantome', 'couper');
+      voyant.classList.add('div', 'voyant');
+
+      //positionnement
+      persoPetit.style.left = cartes.personnages[numCartes].left;
+      persoPetit.style.top = cartes.personnages[numCartes].top;
+      perso.style.width = cartes.personnages[numCartes].width;
+      perso.style.height = cartes.personnages[numCartes].height;
+
+      lieuxPetit.style.left = cartes.cartesLieux[numCartes].left;
+      lieuxPetit.style.top = cartes.cartesLieux[numCartes].top;
+      lieux.style.width = cartes.cartesLieux[numCartes].width;
+      lieux.style.height = cartes.cartesLieux[numCartes].height;
+
+      objetPetit.style.left = cartes.cartesObjet[numCartes].left;
+      objetPetit.style.top = cartes.cartesObjet[numCartes].top;
+      objet.style.width = cartes.cartesObjet[numCartes].width;
+      objet.style.height = cartes.cartesObjet[numCartes].height;
+
+      //ajout d'id
+      image.id = numPlayer;
+
+      //ajout dans le document
+      jeton.appendChild(image);
+      voyant.appendChild(jeton);
+      div.appendChild(voyant);
+
+      perso.appendChild(persoPetit);
+      lieux.appendChild(lieuxPetit);
+      objet.appendChild(objetPetit);
+      voyant.appendChild(perso);
+      voyant.appendChild(lieux);
+      voyant.appendChild(objet);
+      voyant.appendChild(persoGrand);
+      voyant.appendChild(lieuxGrand);
+      voyant.appendChild(objetGrand);
+
+      //ajout des événements
+      contextmenu(persoPetit);
+      contextmenu(persoGrand);
+      contextmenu(lieuxPetit);
+      contextmenu(lieuxGrand);
+      contextmenu(objetPetit);
+      contextmenu(objetGrand);
+      contextmenu(image);
+
+    };
+
+    var xMousePosition = 0;
+    var yMousePosition = 0;
+    document.addEventListener('mousemove',(e) => {
+      xMousePosition = e.clientX + window.pageXOffset;
+      yMousePosition = e.clientY + window.pageYOffset;
+    });
+
+
+    function OK()
+    {
+      alert("Renommer");
+    }
+
+    function NOK()
+    {
+      alert("Editer");
+    }
+
+    var contextmenu = (element) => {
+      element.addEventListener('contextmenu', (event) => {rightClic(event)});
+      function rightClic (event){
+        event.preventDefault();
+        var x = document.getElementById('ctxmenu1');
+        if(x) x.parentNode.removeChild(x);
+
+        var d = document.createElement('div');
+        d.setAttribute('class', 'ctxmenu');
+        d.setAttribute('id', 'ctxmenu1');
+        element.parentNode.appendChild(d);
+        d.style.left = xMousePosition + "px";
+        d.style.top = yMousePosition + "px";
+        d.addEventListener('mouseover', (e) => { this.style.cursor = 'pointer'; });
+        d.addEventListener('click', (e) => { element.parentNode.removeChild(d);  });
+        document.body.addEventListener('click', (e) => { element.parentNode.removeChild(d);  });
+
+        var p = document.createElement('p');
+        d.appendChild(p);
+        p.addEventListener('click', () => { OK(); });
+        p.setAttribute('class', 'ctxline');
+        p.innerHTML = "OK";
+
+        var p2 = document.createElement('p');
+        d.appendChild(p2);
+        p2.addEventListener('click', () =>  { NOK(); });
+        p2.setAttribute('class', 'ctxline');
+        p2.innerHTML = "NOK";
+
+        return false;
+      }
+    };
   });
+
+
+  var joueur = ['joueurQuatre', 'joueurTrois', 'joueurDeux', 'joueurSix', 'joueurCinq', 'joueurUn'];
 
 })(window, io);

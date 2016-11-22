@@ -5,12 +5,13 @@ html
     title jeux backend
     link(rel='stylesheet', href='css/master.css', media='screen', title='no title')
     link(rel='stylesheet', href='css/intro.css', media='screen', title='no title')
+    link(rel='stylesheet', href='css/fantome.css', media='screen', title='no title')
     // Chargement du "framework" client socket.io
     script(type='text/javascript', src='https://cdn.socket.io/socket.io-1.4.5.js')
     script(type='text/javascript', src='js/clickdroit.js')
     script(type='text/javascript', src='js/client.js')
   body
-    .jeux
+    #jeux
       img.intro.connect(src='image/start/intro.jpg', alt='')
       ul#navigation
         li
@@ -40,7 +41,7 @@ html
           input(type='submit', value='connection')
         br
         #chat
-      .div.start
+      .div.start.debut
         img(src='image/start/personnage.jpg', alt='')
         .image.characterOne.couper
           a(href='1')
@@ -60,7 +61,7 @@ html
         .image.characterSix.couper
           a(href='6')
             img.image.characterSix(src='image/start/personnages.png', alt='')
-      .div.start
+      .div.start.debut
         a(href='fantom')
           img(src='image/start/mort.jpg', alt='')
       form#deconnection.start.image(action='', method='get')

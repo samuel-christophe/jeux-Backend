@@ -80,17 +80,19 @@ socketIOWebSocketServer.on('connection', (socket) => {
   socket.on('create player', (data) => {
 
     var partie = db.get().collection('partie');
+    var users = db.get().collection('users');
     //ajoute la room dans la BDD
     partie.count((err,count) => {
       numPartie = count;
     });
 
     var room, numPlayer, joue, start;
-    // Connection collection
-    var users = db.get().collection('users');
     //vérifie si l'utilisateur existe
     users.findOne({username : data.username}, function (err, result) {
 
+      // Connection collection
+      var users = db.get().collection('users');
+      var partie = db.get().collection('partie');
       if (result) {
         //vérifie si le joueur fait partie d'une room
         if (result.partie && result.partie.room) {
@@ -101,13 +103,19 @@ socketIOWebSocketServer.on('connection', (socket) => {
             joue = result.joue;
             if (!rooms[room]) {
               rooms[room] = {};
+              rooms[room].playerListe = [];
             }
-            if (rooms[room]['joueur' + numPlayer]) {
-              rooms[room]['joueur' + numPlayer].joue = joue;
+            rooms[room].listesCartes = result.listesCartes;
+            rooms[room].vision = result.vision;
+            if(joue = 'fantom'){
             } else {
-              rooms[room]['joueur' + numPlayer] = {};
-              rooms[room]['joueur' + numPlayer].username = data.username;
-              rooms[room]['joueur' + numPlayer].joue = joue;
+            }
+            if (rooms[room].playerListe[numPlayer]) {
+              rooms[room].playerListe[numPlayer].joue = joue;
+            } else {
+              rooms[room].playerListe[numPlayer] = {};
+              rooms[room].playerListe[numPlayer].username = data.username;
+              rooms[room].playerListe[numPlayer].joue = joue;
             }
           }
           if (result.start) {
@@ -118,8 +126,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
           socket.join(room);
         }
       } else {
-        // Connection collection
-        var users = db.get().collection('users');
         users.insert({username : data.username});
       }
 
@@ -130,20 +136,18 @@ socketIOWebSocketServer.on('connection', (socket) => {
           //créé une nouvelle room
           room = createRoom();
           numPlayer = 1;
-          rooms[room].joueur1 = {};
-          rooms[room].joueur1.username = data.username;
+          rooms[room].playerListe = [];
+          rooms[room].playerListe[1] = {};
+          rooms[room].playerListe[1].username = data.username;
           socket.join(room);
-          // Connection collection
-          var users = db.get().collection('users');
           //ajoute la room dans la BDD users
           users.updateOne({username : data.username}, { $set: {partie: {room : room, numPlayer : 1}}}, function(err, result) {
             if (err) {
               console.log(err);
             }
           });
-          var partie = db.get().collection('partie');
           //ajoute la room dans la BDD partie
-          partie.updateOne({room : room}, { $set: {joueur1 : {username : data.username} } }, function(err, result) {
+          partie.updateOne({room : room}, { $set: {playerListe: {'1' : {username : data.username} } } }, function(err, result) {
             if (err) {
               console.log(err);
             }
@@ -152,7 +156,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
           //vérifie que la room est libre
           if ( rooms[numPartie] ) {
             //vérifie si une room à une place disponible
-            if (rooms[numPartie].nbPlayer < 7) {
+            if (rooms[numPartie].nbPlayer < 7 && !rooms[numPartie].start) {
               //enregistre le numéro de la room
               room = numPartie;
               //incrémente le nombre de joueur
@@ -160,19 +164,16 @@ socketIOWebSocketServer.on('connection', (socket) => {
               //enregistre le numéro du joueur
               numPlayer = rooms[numPartie].nbPlayer;
               //enregistre le pseudo du joueur
-              rooms[numPartie]['joueur' + rooms[numPartie].nbPlayer] = {};
-              rooms[numPartie]['joueur' + rooms[numPartie].nbPlayer].username = data.username;
-              // Connection collection
-              var users = db.get().collection('users');
+              rooms[numPartie].playerListe[numPlayer] = {};
+              rooms[numPartie].playerListe[numPlayer].username = data.username;
               //ajoute le numéro de la room
               users.updateOne({username : data.username}, { $set: {partie: {room : numPartie, numPlayer : numPlayer}}}, (err, result) => {
                 if (err) {
                   console.log(err);
                 }
               });
-              var partie = db.get().collection('partie');
               //ajoute la room dans la BDD partie
-              partie.updateOne({room : room}, { $set: {['joueur' + numPlayer] : {username : data.username} } }, (err, result) => {
+              partie.updateOne({room : room}, { $set: {playerListe: {['' + numPlayer] : {username : data.username}}, nbPlayer: rooms[numPartie].nbPlayer } }, (err, result) => {
                 if (err) {
                   console.log(err);
                 }
@@ -184,18 +185,16 @@ socketIOWebSocketServer.on('connection', (socket) => {
           if (!room) {
             room = createRoom(this);
             numPlayer = 1;
-            rooms[room].joueur1 = {};
-            rooms[room].joueur1.username = data.username;
-            // Connection collection
-            var users = db.get().collection('users');
+            rooms[room].playerListe = [];
+            rooms[room].playerListe[1] = {};
+            rooms[room].playerListe[1].username = data.username;
             users.updateOne({username : data.username}, { $set: {partie: {room : room, numPlayer : 1}}}, (err, result) => {
               if (err) {
                 console.log(err);
               }
             });
-            var partie = db.get().collection('partie');
             //ajoute la room dans la BDD
-            partie.updateOne({room : room}, { $set: {joueur1 : {username : data.username} } }, (err, result) => {
+            partie.updateOne({room : room}, { $set: {playerListe: {'1' : {username : data.username} } } }, (err, result) => {
               if (err) {
                 console.log(err);
               }
@@ -203,11 +202,32 @@ socketIOWebSocketServer.on('connection', (socket) => {
           }
         }
       }
-      socket.emit('joincreateconfirm', {room: room, numPlayer: numPlayer, joue: joue, start: start});
-      // Let the existing players in room know there is a new player
-      // TODO -- Add room number to this / Player class
-      socketIOWebSocketServer.in(room).emit('new player', {
-        name:data.username
+      var cartes, vision;
+      partie.findOne({room:room},function(err,result){
+        //vérifie que la partie à comencé pour envoyer les cartes
+        if (result.start) {
+          if (joue == 'fantom') {
+            //envoie les cartes du fantome
+            cartes = {
+              personnages: recupCartes(cartesPersonnages, result.listesCartes.cartesPersonnages.tabFantom),
+              cartesLieux: recupCartes(cartesLieux, result.listesCartes.cartesLieux.tabFantom),
+              cartesObjet: recupCartes(cartesObjet, result.listesCartes.cartesObjet.tabFantom)
+            };
+            vision = {};
+          } else {
+            cartes = {
+              personnages: recupCartes(cartesPersonnages, result.listesCartes.cartesPersonnages.tabVoyant),
+              cartesLieux: recupCartes(cartesLieux, result.listesCartes.cartesLieux.tabVoyant),
+              cartesObjet: recupCartes(cartesObjet, result.listesCartes.cartesObjet.tabVoyant)
+            };
+          }
+        }
+        socket.emit('joincreateconfirm', {room: room, numPlayer: numPlayer, joue: joue, start: start, playerListe: result.playerListe, nbPlayer: result.nbPlayer, cartes: cartes});
+        // Let the existing players in room know there is a new player
+        // TODO -- Add room number to this / Player class
+        socketIOWebSocketServer.in(room).emit('new player', {
+          name:data.username
+        });
       });
 
     });
@@ -244,13 +264,14 @@ socketIOWebSocketServer.on('connection', (socket) => {
     // Connection collection
     var partie = db.get().collection('partie');
     var users = db.get().collection('users');
+    var numPlayer = data.numPlayer;
     //selection des personnnage
     if (data.choisPerso) {
       var allSelectPlayer = 0;
       //choix du fantome et le fantome n'a pas déjà été choisi
-      if ( data.perso == 'fantom' && !rooms[data.room].fantom && !rooms[data.room]['joueur' + data.numPlayer].joue ) {
+      if ( data.perso == 'fantom' && !rooms[data.room].fantom && !rooms[data.room].playerListe[data.numPlayer].joue ) {
         //enregistre la valeur
-        partie.updateOne({room : data.room}, { $set: {['joueur' + data.numPlayer] : {joue : data.perso}}}, function(err, result) {
+        partie.updateOne({room : data.room}, { $set: {playerListe: {['' + numPlayer] : {joue : data.perso}}}}, function(err, result) {
           if (err) {
             console.log(err);
           }
@@ -261,15 +282,15 @@ socketIOWebSocketServer.on('connection', (socket) => {
           }
         });
         rooms[data.room].fantom = true;
-        rooms[data.room]['joueur' + data.numPlayer].joue = data.perso;
+        rooms[data.room].playerListe[data.numPlayer].joue = data.perso;
         console.log(rooms[data.room]);
       } else {
         //vérifie si le fantome a déjà été choisi
         if ( rooms[data.room].fantom ) {
           //et que le joueur n'a pas déjà un personnage.
-          if ( !rooms[data.room]['joueur' + data.numPlayer].joue ) {
+          if ( !rooms[data.room].playerListe[data.numPlayer].joue ) {
             //enregistre la valeur
-            partie.updateOne({room : data.room}, { $set: {['joueur' + data.numPlayer] : {joue : data.perso}}}, function(err, result) {
+            partie.updateOne({room : data.room}, { $set: {playerListe: {['' + numPlayer] : {joue : data.perso}}}}, function(err, result) {
               if (err) {
                 console.log(err);
               }
@@ -279,7 +300,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
                 console.log(err);
               }
             });
-            rooms[data.room]['joueur' + data.numPlayer].joue = data.perso;
+            rooms[data.room].playerListe[data.numPlayer].joue = data.perso;
           }
         } else {
           data.fantom = true;
@@ -289,7 +310,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       //vérifie que tous les joueurs on slectionné un personnage, qu'il y en a au moins 2 et que le niveau à était selectionné
       if (rooms[data.room].nbPlayer > 1 && rooms[data.room].level) {
         for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-          if (rooms[data.room]['joueur' + i].joue) {
+          if (rooms[data.room].playerListe[i].joue) {
             allSelectPlayer++;
           }
         }
@@ -297,13 +318,13 @@ socketIOWebSocketServer.on('connection', (socket) => {
           data.start = true;
           rooms[data.room].listesCartes = cartes.get(rooms[data.room].level, rooms[data.room].nbPlayer);
           rooms[data.room].vision = cartes.vision(vision);
-          partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision}}, function(err, result) {
+          partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe}}, function(err, result) {
             if (err) {
               console.log(err);
             }
           });
           for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-            users.updateOne({username : rooms[data.room]['joueur' + i].username}, { $set: {start: true} }, function(err, result) {
+            users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision} }, function(err, result) {
               if (err) {
                 console.log(err);
               }
@@ -339,7 +360,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
     //vérifie que tous les joueurs on slectionné un personnage, qu'il y en a au moins 2
     if (rooms[data.room].nbPlayer > 1) {
       for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-        if (rooms[data.room]['joueur' + i].joue) {
+        if (rooms[data.room].playerListe[i].joue) {
           allSelectPlayer++;
         }
       }
@@ -347,16 +368,14 @@ socketIOWebSocketServer.on('connection', (socket) => {
         data.start = true;
         rooms[data.room].listesCartes = cartes.get(rooms[data.room].level, rooms[data.room].nbPlayer);
         rooms[data.room].vision = cartes.vision(vision);
-        partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision}}, function(err, result) {
+        partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe}}, function(err, result) {
           if (err) {
             console.log(err);
-          } else {
-            console.log(result);
           }
         });
         //enregistre que la partie à commencé pour tous les joueurs
         for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-          users.updateOne({username : rooms[data.room]['joueur' + i].username}, { $set: {start: true} }, function(err, result) {
+          users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision} }, function(err, result) {
             if (err) {
               console.log(err);
             }
@@ -388,6 +407,15 @@ socketIOWebSocketServer.on('connection', (socket) => {
 
 
 });
+
+
+function recupCartes (tabCarte, tab) {
+  var listesCartes = [];
+  for (var i = 0; i < tab.length; i++) {
+    listesCartes[i] = tabCarte[tab[i]];
+  }
+  return listesCartes;
+};
 
 // Function that handles room creation
 function createRoom() {
