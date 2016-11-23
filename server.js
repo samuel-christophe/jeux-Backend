@@ -43,7 +43,7 @@ app.get('/connect',(req,res) => {
 });
 
 //liste des cartes
-var vision = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126];
+var vision = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125];
 
 
 /**
@@ -94,6 +94,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       var users = db.get().collection('users');
       var partie = db.get().collection('partie');
       if (result) {
+        console.log(carteVisions.length);
         //vérifie si le joueur fait partie d'une room
         if (result.partie && result.partie.room) {
           //enregistre les information du joueur
@@ -104,11 +105,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
             if (!rooms[room]) {
               rooms[room] = {};
               rooms[room].playerListe = [];
-            }
-            rooms[room].listesCartes = result.listesCartes;
-            rooms[room].vision = result.vision;
-            if(joue = 'fantom'){
-            } else {
             }
             if (rooms[room].playerListe[numPlayer]) {
               rooms[room].playerListe[numPlayer].joue = joue;
@@ -202,18 +198,20 @@ socketIOWebSocketServer.on('connection', (socket) => {
           }
         }
       }
-      var cartes, vision;
+      var cartes;
       partie.findOne({room:room},function(err,result){
         //vérifie que la partie à comencé pour envoyer les cartes
         if (result.start) {
+          rooms[room].listesCartes = result.listesCartes;
+          rooms[room].vision = result.vision;
           if (joue == 'fantom') {
             //envoie les cartes du fantome
             cartes = {
               personnages: recupCartes(cartesPersonnages, result.listesCartes.cartesPersonnages.tabFantom),
               cartesLieux: recupCartes(cartesLieux, result.listesCartes.cartesLieux.tabFantom),
-              cartesObjet: recupCartes(cartesObjet, result.listesCartes.cartesObjet.tabFantom)
+              cartesObjet: recupCartes(cartesObjet, result.listesCartes.cartesObjet.tabFantom),
+              vision: recupCartes(carteVisions, result.listesCartes.cardVision)
             };
-            vision = {};
           } else {
             cartes = {
               personnages: recupCartes(cartesPersonnages, result.listesCartes.cartesPersonnages.tabVoyant),
@@ -318,17 +316,36 @@ socketIOWebSocketServer.on('connection', (socket) => {
           data.start = true;
           rooms[data.room].listesCartes = cartes.get(rooms[data.room].level, rooms[data.room].nbPlayer);
           rooms[data.room].vision = cartes.vision(vision);
+          rooms[data.room].listesCartes.cardVision = rooms[data.room].vision.slice(0,7);
+          rooms[data.room].vision = rooms[data.room].vision.slice(7);
           partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe}}, function(err, result) {
             if (err) {
               console.log(err);
             }
           });
           for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-            users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision} }, function(err, result) {
+            users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true} }, function(err, result) {
               if (err) {
                 console.log(err);
               }
             });
+            if (rooms[data.room].playerListe[i].joue == 'fantom') {
+              //envoie les cartes du fantome
+              cartes = {
+                personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabFantom),
+                cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabFantom),
+                cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabFantom),
+                vision: recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision)
+              };
+              socketIOWebSocketServer.emit(rooms[data.room].playerListe[i].username, {cartes : cartes});
+            } else {
+              cartes = {
+                personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
+                cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabVoyant),
+                cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabVoyant)
+              };
+              socketIOWebSocketServer.emit(rooms[data.room].playerListe[i].username, {cartes : cartes});
+            }
           }
         }
       }
@@ -368,6 +385,8 @@ socketIOWebSocketServer.on('connection', (socket) => {
         data.start = true;
         rooms[data.room].listesCartes = cartes.get(rooms[data.room].level, rooms[data.room].nbPlayer);
         rooms[data.room].vision = cartes.vision(vision);
+        rooms[data.room].listesCartes.cardVision = rooms[data.room].vision.slice(0,7);
+        rooms[data.room].vision = rooms[data.room].vision.slice(7);
         partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe}}, function(err, result) {
           if (err) {
             console.log(err);
@@ -375,11 +394,28 @@ socketIOWebSocketServer.on('connection', (socket) => {
         });
         //enregistre que la partie à commencé pour tous les joueurs
         for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-          users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision} }, function(err, result) {
+          users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true} }, function(err, result) {
             if (err) {
               console.log(err);
             }
           });
+          if (rooms[data.room].playerListe[i].joue == 'fantom') {
+            //envoie les cartes du fantome
+            cartes = {
+              personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabFantom),
+              cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabFantom),
+              cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabFantom),
+              vision: recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision)
+            };
+            socketIOWebSocketServer.emit(rooms[data.room].playerListe[i].username, {cartes : cartes});
+          } else {
+            cartes = {
+              personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
+              cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabVoyant),
+              cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabVoyant)
+            };
+            socketIOWebSocketServer.emit(rooms[data.room].playerListe[i].username, {cartes : cartes});
+          }
         }
       }
     }
@@ -546,4 +582,132 @@ var cartesObjet = [
   cP('-230px', '-2604px', '113px', '81px', 'objet 22.jpg'),
   cP('-115px', '-2604px', '113px', '81px', 'objet 23.jpg'),
   cP(0, '-2604px', '113px', '81px', 'objet 24.jpg')
+];
+var carteVisions = [
+  cP(0, 0, '150px', '228px', 'carte 01.jpg'),
+  cP('-155px', 0, '150px', '229px', 'carte 02.jpg'),
+  cP('-310px', 0, '150px', '228px', 'carte 03.jpg'),
+  cP('-465px', 0, '150px', '228px', 'carte 04.jpg'),
+  cP('-620px', 0, '150px', '228px', 'carte 05.jpg'),
+  cP('-775px', 0, '149px', '228px', 'carte 06.jpg'),
+  cP('-929px', 0, '150px', '228px', 'carte 07.jpg'),
+  cP('-1084px', 0, '150px', '227px', 'carte 08.jpg'),
+  cP('-1239px', 0, '150px', '227px', 'carte 09.jpg'),
+  cP('-1394px', 0, '149px', '227px', 'carte 10.jpg'),
+  cP('-1548px', 0, '149px', '227px', 'carte 11.jpg'),
+  cP('-1702px', 0, '150px', '227px', 'carte 12.jpg'),
+  cP(0, '235px', '150px', '228px', 'carte 13.jpg'),
+  cP('-155px', '235px', '150px', '228px', 'carte 14.jpg'),
+  cP('-310px', '235px', '150px', '228px', 'carte 15.jpg'),
+  cP('-465px', '235px', '150px', '228px', 'carte 16.jpg'),
+  cP('-620px', '235px', '150px', '228px', 'carte 17.jpg'),
+  cP('-775px', '235px', '150px', '228px', 'carte 18.jpg'),
+  cP('-930px', '235px', '150px', '228px', 'carte 19.jpg'),
+  cP('-1085px', '235px', '150px', '228px', 'carte 20.jpg'),
+  cP('-1240px', '235px', '150px', '228px', 'carte 21.jpg'),
+  cP('-1395px', '235px', '150px', '228px', 'carte 22.jpg'),
+  cP('-1550px', '235px', '150px', '228px', 'carte 23.jpg'),
+  cP('-1705px', '235px', '147px', '228px', 'carte 24.jpg'),
+  cP(0, '-470px', '150px', '228px', 'carte 25.jpg'),
+  cP('-155px', '-470px', '150px', '228px', 'carte 26.jpg'),
+  cP('-310px', '-470px', '150px', '228px', 'carte 27.jpg'),
+  cP('-465px', '-470px', '150px', '228px', 'carte 28.jpg'),
+  cP('-620px', '-470px', '150px', '228px', 'carte 29.jpg'),
+  cP('-775px', '-470px', '150px', '228px', 'carte 30.jpg'),
+  cP('-930px', '-470px', '150px', '228px', 'carte 31.jpg'),
+  cP('-1085px', '-470px', '150px', '228px', 'carte 32.jpg'),
+  cP('-1240px', '-470px', '150px', '228px', 'carte 33.jpg'),
+  cP('-1395px', '-470px', '150px', '228px', 'carte 34.jpg'),
+  cP('-1550px', '-470px', '150px', '228px', 'carte 35.jpg'),
+  cP(0, 0, '150px', '228px', 'carte 01.jpg'),
+  cP('-155px', 0, '150px', '229px', 'carte 02.jpg'),
+  cP('-310px', 0, '150px', '228px', 'carte 03.jpg'),
+  cP('-465px', 0, '150px', '228px', 'carte 04.jpg'),
+  cP('-620px', 0, '150px', '228px', 'carte 05.jpg'),
+  cP('-775px', 0, '149px', '228px', 'carte 06.jpg'),
+  cP('-929px', 0, '150px', '228px', 'carte 07.jpg'),
+  cP('-1084px', 0, '150px', '227px', 'carte 08.jpg'),
+  cP('-1239px', 0, '150px', '227px', 'carte 09.jpg'),
+  cP('-1394px', 0, '149px', '227px', 'carte 10.jpg'),
+  cP('-1548px', 0, '149px', '227px', 'carte 11.jpg'),
+  cP('-1702px', 0, '150px', '227px', 'carte 12.jpg'),
+  cP(0, '235px', '150px', '228px', 'carte 13.jpg'),
+  cP('-155px', '235px', '150px', '228px', 'carte 14.jpg'),
+  cP('-310px', '235px', '150px', '228px', 'carte 15.jpg'),
+  cP('-465px', '235px', '150px', '228px', 'carte 16.jpg'),
+  cP('-620px', '235px', '150px', '228px', 'carte 17.jpg'),
+  cP('-775px', '235px', '150px', '228px', 'carte 18.jpg'),
+  cP('-930px', '235px', '150px', '228px', 'carte 19.jpg'),
+  cP('-1085px', '235px', '150px', '228px', 'carte 20.jpg'),
+  cP('-1240px', '235px', '150px', '228px', 'carte 21.jpg'),
+  cP('-1395px', '235px', '150px', '228px', 'carte 22.jpg'),
+  cP('-1550px', '235px', '150px', '228px', 'carte 23.jpg'),
+  cP('-1705px', '235px', '147px', '228px', 'carte 24.jpg'),
+  cP(0, '-470px', '150px', '228px', 'carte 25.jpg'),
+  cP('-155px', '-470px', '150px', '228px', 'carte 26.jpg'),
+  cP('-310px', '-470px', '150px', '228px', 'carte 27.jpg'),
+  cP('-465px', '-470px', '150px', '228px', 'carte 28.jpg'),
+  cP('-620px', '-470px', '150px', '228px', 'carte 29.jpg'),
+  cP('-775px', '-470px', '150px', '228px', 'carte 30.jpg'),
+  cP('-930px', '-470px', '150px', '228px', 'carte 31.jpg'),
+  cP('-1085px', '-470px', '150px', '228px', 'carte 32.jpg'),
+  cP('-1240px', '-470px', '150px', '228px', 'carte 33.jpg'),
+  cP('-1395px', '-470px', '150px', '228px', 'carte 34.jpg'),
+  cP('-1550px', '-470px', '150px', '228px', 'carte 35.jpg'),
+  cP(0, 0, '150px', '228px', 'carte 01.jpg'),
+  cP('-155px', 0, '150px', '229px', 'carte 02.jpg'),
+  cP('-310px', 0, '150px', '228px', 'carte 03.jpg'),
+  cP('-465px', 0, '150px', '228px', 'carte 04.jpg'),
+  cP('-620px', 0, '150px', '228px', 'carte 05.jpg'),
+  cP('-775px', 0, '149px', '228px', 'carte 06.jpg'),
+  cP('-929px', 0, '150px', '228px', 'carte 07.jpg'),
+  cP('-1084px', 0, '150px', '227px', 'carte 08.jpg'),
+  cP('-1239px', 0, '150px', '227px', 'carte 09.jpg'),
+  cP('-1394px', 0, '149px', '227px', 'carte 10.jpg'),
+  cP('-1548px', 0, '149px', '227px', 'carte 11.jpg'),
+  cP('-1702px', 0, '150px', '227px', 'carte 12.jpg'),
+  cP(0, '235px', '150px', '228px', 'carte 13.jpg'),
+  cP('-155px', '235px', '150px', '228px', 'carte 14.jpg'),
+  cP('-310px', '235px', '150px', '228px', 'carte 15.jpg'),
+  cP('-465px', '235px', '150px', '228px', 'carte 16.jpg'),
+  cP('-620px', '235px', '150px', '228px', 'carte 17.jpg'),
+  cP('-775px', '235px', '150px', '228px', 'carte 18.jpg'),
+  cP('-930px', '235px', '150px', '228px', 'carte 19.jpg'),
+  cP('-1085px', '235px', '150px', '228px', 'carte 20.jpg'),
+  cP('-1240px', '235px', '150px', '228px', 'carte 21.jpg'),
+  cP('-1395px', '235px', '150px', '228px', 'carte 22.jpg'),
+  cP('-1550px', '235px', '150px', '228px', 'carte 23.jpg'),
+  cP('-1705px', '235px', '147px', '228px', 'carte 24.jpg'),
+  cP(0, '-470px', '150px', '228px', 'carte 25.jpg'),
+  cP('-155px', '-470px', '150px', '228px', 'carte 26.jpg'),
+  cP('-310px', '-470px', '150px', '228px', 'carte 27.jpg'),
+  cP('-465px', '-470px', '150px', '228px', 'carte 28.jpg'),
+  cP('-620px', '-470px', '150px', '228px', 'carte 29.jpg'),
+  cP('-775px', '-470px', '150px', '228px', 'carte 30.jpg'),
+  cP('-930px', '-470px', '150px', '228px', 'carte 31.jpg'),
+  cP('-1085px', '-470px', '150px', '228px', 'carte 32.jpg'),
+  cP('-1240px', '-470px', '150px', '228px', 'carte 33.jpg'),
+  cP('-1395px', '-470px', '150px', '228px', 'carte 34.jpg'),
+  cP('-1550px', '-470px', '150px', '228px', 'carte 35.jpg'),
+  cP(0, 0, '150px', '228px', 'carte 01.jpg'),
+  cP('-155px', 0, '150px', '229px', 'carte 02.jpg'),
+  cP('-310px', 0, '150px', '228px', 'carte 03.jpg'),
+  cP('-465px', 0, '150px', '228px', 'carte 04.jpg'),
+  cP('-620px', 0, '150px', '228px', 'carte 05.jpg'),
+  cP('-775px', 0, '149px', '228px', 'carte 06.jpg'),
+  cP('-929px', 0, '150px', '228px', 'carte 07.jpg'),
+  cP('-1084px', 0, '150px', '227px', 'carte 08.jpg'),
+  cP('-1239px', 0, '150px', '227px', 'carte 09.jpg'),
+  cP('-1394px', 0, '149px', '227px', 'carte 10.jpg'),
+  cP('-1548px', 0, '149px', '227px', 'carte 11.jpg'),
+  cP('-1702px', 0, '150px', '227px', 'carte 12.jpg'),
+  cP(0, '235px', '150px', '228px', 'carte 13.jpg'),
+  cP('-155px', '235px', '150px', '228px', 'carte 14.jpg'),
+  cP('-310px', '235px', '150px', '228px', 'carte 15.jpg'),
+  cP('-465px', '235px', '150px', '228px', 'carte 16.jpg'),
+  cP('-620px', '235px', '150px', '228px', 'carte 17.jpg'),
+  cP('-775px', '235px', '150px', '228px', 'carte 18.jpg'),
+  cP('-930px', '235px', '150px', '228px', 'carte 19.jpg'),
+  cP('-1085px', '235px', '150px', '228px', 'carte 20.jpg'),
+  cP('-1240px', '235px', '150px', '228px', 'carte 21.jpg')
 ];

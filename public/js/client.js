@@ -111,9 +111,14 @@
 
       //vérifie si la partie à déjà commencé
       if (data.start) {
-        debutPartie();
+        // debutPartie();
       }
 
+    });
+
+    //envoie de donné privé du serveur
+    socket.on(pseudo, (data) => {
+      console.log('reception des cartes : ' + data);
     });
 
     socket.on('new player', (data) => {
@@ -227,7 +232,7 @@
         }
         //début de la partie
         if (data.start){
-          debutPartie ();
+          // debutPartie ();
         }
       }
     });
@@ -256,7 +261,7 @@
       }
       //début de la partie
       if (data.start){
-        debutPartie ();
+        // debutPartie ();
       }
     });
 
@@ -294,20 +299,21 @@
       ecran.classList.add('image', 'background');
       jeux.appendChild(ecran);
 
+      var div = document.createElement('div');
+      var heure = document.createElement('div');
+      var position = document.createElement('div');
+      var horloge = document.createElement('img');
+      heure.classList.add('image', 'heure', 'couper');
+      position.classList.add('position');
+      horloge.classList.add('horloge');
+      horloge.src = 'image/plateau.png';
+      heure.appendChild(horloge);
+      position.appendChild(heure);
+      jeux.insertBefore(position, ecran);
+      div.classList.add('avatar');
+
       //si le joueur joue le fantom
       if (perso == 'fantom') {
-        var div = document.createElement('div');
-        var heure = document.createElement('div');
-        var position = document.createElement('div');
-        var horloge = document.createElement('img');
-        heure.classList.add('div', 'heure', 'couper');
-        position.classList.add('position');
-        horloge.classList.add('horloge');
-        horloge.src = 'image/plateau.png';
-        heure.appendChild(horloge);
-        position.appendChild(heure);
-        jeux.insertBefore(position, ecran);
-        div.classList.add('avatar');
         var j = 0;
         for (var i = 1; i <= nbPlayer; i++) {
           if (i != numPlayer) {
@@ -341,8 +347,6 @@
       persoPetit.src = 'image/sprite carte.png';
       lieuxPetit.src = 'image/sprite carte.png';
       objetPetit.src = 'image/sprite carte.png';
-      console.log(numCartes);
-      console.log(cartes.personnages[numCartes]);
       persoGrand.src = 'image/carte personnage/' + cartes.personnages[numCartes].src;
       lieuxGrand.src = 'image/cartes lieu/' + cartes.cartesLieux[numCartes].src;
       objetGrand.src = 'image/carte objet/' + cartes.cartesObjet[numCartes].src;
@@ -352,12 +356,12 @@
       persoPetit.classList.add('image');
       lieuxPetit.classList.add('image');
       objetPetit.classList.add('image');
-      persoGrand.classList.add('image', 'start');
-      lieuxGrand.classList.add('image', 'start');
-      objetGrand.classList.add('image', 'start');
-      perso.classList.add('couper');
-      lieux.classList.add('couper');
-      objet.classList.add('couper');
+      persoGrand.classList.add('image', 'start', 'grandeCarte');
+      lieuxGrand.classList.add('image', 'start', 'grandeCarte');
+      objetGrand.classList.add('image', 'start', 'grandeCarte');
+      perso.classList.add('couper', 'carte');
+      lieux.classList.add('couper', 'carte');
+      objet.classList.add('couper', 'carte');
       image.classList.add('image', joueur[numPlayer -1]);
       jeton.classList.add('div', 'jetonFantome', 'couper');
       voyant.classList.add('div', 'voyant');
@@ -392,18 +396,18 @@
       voyant.appendChild(perso);
       voyant.appendChild(lieux);
       voyant.appendChild(objet);
-      voyant.appendChild(persoGrand);
-      voyant.appendChild(lieuxGrand);
-      voyant.appendChild(objetGrand);
+      jeux.appendChild(persoGrand);
+      jeux.appendChild(lieuxGrand);
+      jeux.appendChild(objetGrand);
 
       //ajout des événements
-      contextmenu(persoPetit);
-      contextmenu(persoGrand);
-      contextmenu(lieuxPetit);
-      contextmenu(lieuxGrand);
-      contextmenu(objetPetit);
-      contextmenu(objetGrand);
-      contextmenu(image);
+      afficheImage(persoPetit, persoGrand);
+      afficheImage(persoGrand, persoGrand);
+      afficheImage(lieuxPetit, lieuxGrand);
+      afficheImage(lieuxGrand, lieuxGrand);
+      afficheImage(objetPetit, objetGrand);
+      afficheImage(objetGrand, objetGrand);
+      contextmenu(jeton);
 
     };
 
@@ -425,6 +429,20 @@
       alert("Editer");
     }
 
+    function vision()
+    {
+      alert("Editer");
+    }
+
+    var afficheImage = (element, hiddenShow) => {
+      element.addEventListener('click', (event) => {clic(event)});
+      function clic (event) {
+        hiddenShow.classList.toggle('start');
+        console.log(hiddenShow);
+        console.log(hiddenShow.classList);
+      };
+    };
+
     var contextmenu = (element) => {
       element.addEventListener('contextmenu', (event) => {rightClic(event)});
       function rightClic (event){
@@ -435,24 +453,31 @@
         var d = document.createElement('div');
         d.setAttribute('class', 'ctxmenu');
         d.setAttribute('id', 'ctxmenu1');
-        element.parentNode.appendChild(d);
+        d.style.zIndex = 2;
+        jeux.appendChild(d);
         d.style.left = xMousePosition + "px";
         d.style.top = yMousePosition + "px";
-        d.addEventListener('mouseover', (e) => { this.style.cursor = 'pointer'; });
-        d.addEventListener('click', (e) => { element.parentNode.removeChild(d);  });
-        document.body.addEventListener('click', (e) => { element.parentNode.removeChild(d);  });
+        d.addEventListener('mouseover', function (e) { this.style.cursor = 'pointer'; });
+        d.addEventListener('click', function (e) { element.parentNode.removeChild(d);  });
+        document.body.addEventListener('click', function (e) { element.parentNode.removeChild(d);  });
 
         var p = document.createElement('p');
         d.appendChild(p);
         p.addEventListener('click', () => { OK(); });
         p.setAttribute('class', 'ctxline');
-        p.innerHTML = "OK";
+        p.innerHTML = 'OK';
+
+        var p1 = document.createElement('p');
+        d.appendChild(p1);
+        p1.addEventListener('click', () =>  { NOK(); });
+        p1.setAttribute('class', 'ctxline');
+        p1.innerHTML = 'NOK';
 
         var p2 = document.createElement('p');
         d.appendChild(p2);
-        p2.addEventListener('click', () =>  { NOK(); });
+        p2.addEventListener('click', () =>  { vision(); });
         p2.setAttribute('class', 'ctxline');
-        p2.innerHTML = "NOK";
+        p2.innerHTML = 'Choisisé une carte vision';
 
         return false;
       }
