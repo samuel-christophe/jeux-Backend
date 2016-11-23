@@ -9,7 +9,7 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    var socket = io('http://192.168.1.30:8888/');
+    var socket = io('http://10.1.1.111:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
 
@@ -117,8 +117,8 @@
     });
 
     //envoie de donné privé du serveur
-    socket.on(pseudo, (data) => {
-      console.log('reception des cartes : ' + data);
+    socket.on('cartes', (data) => {
+      console.log(data);
     });
 
     socket.on('new player', (data) => {
@@ -188,6 +188,7 @@
     deconnection.addEventListener('submit', (event) => {
       event.preventDefault();
       socket.emit('disconnect', {room: room, username: username});
+
     });
 
     send.addEventListener('submit', (event) => {
@@ -232,7 +233,7 @@
         }
         //début de la partie
         if (data.start){
-          // debutPartie ();
+          debutPartie ();
         }
       }
     });
@@ -261,7 +262,7 @@
       }
       //début de la partie
       if (data.start){
-        // debutPartie ();
+        debutPartie ();
       }
     });
 

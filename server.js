@@ -71,10 +71,6 @@ var socketIOWebSocketServer = socketIO(httpServer);
   d'une requête WebSocket provenant d'un client WebSocket.
 **/
 socketIOWebSocketServer.on('connection', (socket) => {
-  // once a client has connected, we expect to get a ping from them saying what room they want to join
-  socket.on('room', (room) => {
-    socket.join(room);
-  });
 
   //add player
   socket.on('create player', (data) => {
@@ -220,17 +216,30 @@ socketIOWebSocketServer.on('connection', (socket) => {
             };
           }
         }
-        socket.emit('joincreateconfirm', {room: room, numPlayer: numPlayer, joue: joue, start: start, playerListe: result.playerListe, nbPlayer: result.nbPlayer, cartes: cartes});
+        //crée une room par player;
+        socket.join(data.username);
+        //envoie du message au player
+        socketIOWebSocketServer.in(data.username).emit('joincreateconfirm', {
+          room: room,
+          numPlayer: numPlayer,
+          joue: joue,
+          start: start,
+          playerListe: result.playerListe,
+          nbPlayer: result.nbPlayer,
+          cartes: cartes
+        });
+        socketIOWebSocketServer.in(data.username).emit('cartes', {cartes : 'bonne reception'});
         // Let the existing players in room know there is a new player
         // TODO -- Add room number to this / Player class
         socketIOWebSocketServer.in(room).emit('new player', {
-          name:data.username
+          name:data.username,
         });
       });
 
     });
   });
   socket.on('disconnect', (data) => {
+    console.log('deconnection');
     console.log(data);
     // If the room is empty, remove the room and tell the players,
     // if not, just tell the players the player has left
@@ -337,14 +346,16 @@ socketIOWebSocketServer.on('connection', (socket) => {
                 cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabFantom),
                 vision: recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision)
               };
-              socketIOWebSocketServer.emit(rooms[data.room].playerListe[i].username, {cartes : cartes});
+              console.log('envoie des cartes');
+              socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
             } else {
               cartes = {
                 personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
                 cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabVoyant),
                 cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabVoyant)
               };
-              socketIOWebSocketServer.emit(rooms[data.room].playerListe[i].username, {cartes : cartes});
+              console.log('envoie des cartes');
+              socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
             }
           }
         }
@@ -407,14 +418,14 @@ socketIOWebSocketServer.on('connection', (socket) => {
               cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabFantom),
               vision: recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision)
             };
-            socketIOWebSocketServer.emit(rooms[data.room].playerListe[i].username, {cartes : cartes});
+            ssocketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
           } else {
             cartes = {
               personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
               cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabVoyant),
               cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabVoyant)
             };
-            socketIOWebSocketServer.emit(rooms[data.room].playerListe[i].username, {cartes : cartes});
+            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
           }
         }
       }
