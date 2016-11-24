@@ -54,6 +54,7 @@ var vision = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,2
   une connexion persistante basée sur WebSocket.
 **/
 
+
 /**
   On installe et on utilise le package socket.io.
   La documentation est ici :
@@ -90,12 +91,12 @@ socketIOWebSocketServer.on('connection', (socket) => {
       var users = db.get().collection('users');
       var partie = db.get().collection('partie');
       if (result) {
-        console.log(carteVisions.length);
         //vérifie si le joueur fait partie d'une room
         if (result.partie && result.partie.room) {
           //enregistre les information du joueur
           numPlayer = result.partie.numPlayer;
           room = result.partie.room;
+          //enregistre le rôle
           if (result.joue) {
             joue = result.joue;
             if (!rooms[room]) {
@@ -110,6 +111,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
               rooms[room].playerListe[numPlayer].joue = joue;
             }
           }
+          //partie commencé
           if (result.start) {
             start = true;
             rooms[room].start = true;
@@ -133,13 +135,13 @@ socketIOWebSocketServer.on('connection', (socket) => {
           rooms[room].playerListe[1].username = data.username;
           socket.join(room);
           //ajoute la room dans la BDD users
-          users.updateOne({username : data.username}, { $set: {partie: {room : room, numPlayer : 1}}}, function(err, result) {
+          users.updateOne({username : data.username}, { $set: {partie: {room : room, numPlayer : 1}, nbPlayer: 1}}, function(err, result) {
             if (err) {
               console.log(err);
             }
           });
           //ajoute la room dans la BDD partie
-          partie.updateOne({room : room}, { $set: {playerListe: {'1' : {username : data.username} } } }, function(err, result) {
+          partie.updateOne({room : room}, { $set: {playerListe: rooms[room].playerListe } }, function(err, result) {
             if (err) {
               console.log(err);
             }
@@ -153,19 +155,22 @@ socketIOWebSocketServer.on('connection', (socket) => {
               room = numPartie;
               //incrémente le nombre de joueur
               rooms[numPartie].nbPlayer++;
-              //enregistre le numéro du joueur
-              numPlayer = rooms[numPartie].nbPlayer;
+              for (var i = 1; i <= rooms[numPartie].nbPlayer; i++) {
+                if (!rooms[numPartie].playerListe[i]) {
+                  numPlayer = i;
+                }
+              }
               //enregistre le pseudo du joueur
               rooms[numPartie].playerListe[numPlayer] = {};
               rooms[numPartie].playerListe[numPlayer].username = data.username;
               //ajoute le numéro de la room
-              users.updateOne({username : data.username}, { $set: {partie: {room : numPartie, numPlayer : numPlayer}}}, (err, result) => {
+              users.updateOne({username : data.username}, { $set: {partie: {room : numPartie, numPlayer : numPlayer}, nbPlayer : rooms[numPartie].nbPlayer}}, (err, result) => {
                 if (err) {
                   console.log(err);
                 }
               });
               //ajoute la room dans la BDD partie
-              partie.updateOne({room : room}, { $set: {playerListe: {['' + numPlayer] : {username : data.username}}, nbPlayer: rooms[numPartie].nbPlayer } }, (err, result) => {
+              partie.updateOne({room : room}, { $set: {playerListe: rooms[room].playerListe, nbPlayer: rooms[numPartie].nbPlayer } }, (err, result) => {
                 if (err) {
                   console.log(err);
                 }
@@ -186,7 +191,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
               }
             });
             //ajoute la room dans la BDD
-            partie.updateOne({room : room}, { $set: {playerListe: {'1' : {username : data.username} } } }, (err, result) => {
+            partie.updateOne({room : room}, { $set: {playerListe: rooms[room].playerListe } }, (err, result) => {
               if (err) {
                 console.log(err);
               }
@@ -216,7 +221,8 @@ socketIOWebSocketServer.on('connection', (socket) => {
             };
           }
         }
-        //crée une room par player;
+        rooms[room].fantom = false;
+        //crée une room par player
         socket.join(data.username);
         //envoie du message au player
         socketIOWebSocketServer.in(data.username).emit('joincreateconfirm', {
@@ -228,7 +234,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
           nbPlayer: result.nbPlayer,
           cartes: cartes
         });
-        socketIOWebSocketServer.in(data.username).emit('cartes', {cartes : 'bonne reception'});
         // Let the existing players in room know there is a new player
         // TODO -- Add room number to this / Player class
         socketIOWebSocketServer.in(room).emit('new player', {
@@ -238,24 +243,57 @@ socketIOWebSocketServer.on('connection', (socket) => {
 
     });
   });
-  socket.on('disconnect', (data) => {
-    console.log('deconnection');
-    console.log(data);
+  socket.on('disconnected', (data) => {
+    // Connection collection
+    var users = db.get().collection('users');
+    var partie = db.get().collection('partie');
     // If the room is empty, remove the room and tell the players,
     // if not, just tell the players the player has left
     socket.leave(data.room);
-     if(socketIOWebSocketServer.in(data.room) === []) {
-        rooms.splice(rooms.indexOf(data.room), 1);
-    } else {
-        socketIOWebSocketServer.in(data.room).emit("remove player", {username: data.username});
-    }
-    // Connection collection
-    var users = db.get().collection('users');
-    users.updateOne({username : data.username}, { $unset: {room : ''}}, function(err, result) {
-      if (err) {
-        console.log(err);
+    if (rooms[data.room].start) {
+      socketIOWebSocketServer.in(data.room).emit('remove player', {end : true, username : data.username});
+      //fin de partie
+      partie.updateOne({room : data.room}, { $set: {end : true} }, function(err, result) {
+        if (err) {
+          console.log(err);
+        }
+      });
+      for (var i = 1; i <= (rooms[data.room].nbPlayer); i++) {
+        users.deleteOne({username : rooms[data.room].playerListe[i].username}, function(err, result) {
+          if (err) {
+            console.log(err);
+          }
+        });
       }
-    });
+    } else {
+      users.deleteOne({username : data.username});
+      rooms[data.room].playerListe[data.numPlayer] = undefined;
+      rooms[data.room].nbPlayer--;
+      if(socketIOWebSocketServer.in(data.room) === []) {
+        rooms[data.room] = undefined;
+      } else {
+        //informe les joueurs
+        socketIOWebSocketServer.in(data.room).emit('remove player', {data});
+      }
+      //met la liste des joueur à jour
+      partie.updateOne({room : data.room}, { $set: {playerListe : rooms[data.room].playerListe, nbPlayer : rooms[data.room].nbPlayer} }, function(err, result) {
+        if (err) {
+          console.log(err);
+        }
+      });
+      //mise à jour du nombre de joueur
+      for (var i = 1; i <= (rooms[data.room].nbPlayer + 1); i++) {
+        console.log(i);
+        if (i != data.numPlayer) {
+          console.log(rooms[data.room].playerListe[i]);
+          users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {nbPlayer: rooms[data.room].nbPlayer} }, function(err, result) {
+            if (err) {
+              console.log(err);
+            }
+          });
+        }
+      }
+    }
   });
 
   /**
@@ -278,7 +316,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       //choix du fantome et le fantome n'a pas déjà été choisi
       if ( data.perso == 'fantom' && !rooms[data.room].fantom && !rooms[data.room].playerListe[data.numPlayer].joue ) {
         //enregistre la valeur
-        partie.updateOne({room : data.room}, { $set: {playerListe: {['' + numPlayer] : {joue : data.perso}}}}, function(err, result) {
+        partie.updateOne({room : data.room}, { $set: {playerListe: rooms[data.room].playerListe} }, function(err, result) {
           if (err) {
             console.log(err);
           }
@@ -297,7 +335,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
           //et que le joueur n'a pas déjà un personnage.
           if ( !rooms[data.room].playerListe[data.numPlayer].joue ) {
             //enregistre la valeur
-            partie.updateOne({room : data.room}, { $set: {playerListe: {['' + numPlayer] : {joue : data.perso}}}}, function(err, result) {
+            partie.updateOne({room : data.room}, { $set: {playerListe: rooms[data.room].playerListe}}, function(err, result) {
               if (err) {
                 console.log(err);
               }
@@ -418,7 +456,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
               cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabFantom),
               vision: recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision)
             };
-            ssocketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
+            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
           } else {
             cartes = {
               personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
@@ -489,6 +527,16 @@ db.connect(url, function(err) {
     console.log('Impossible de se connecter à la base de données.');
     process.exit(1);
   } else {
+    var partie = db.get().collection('partie');
+    //ajoute la room dans la BDD
+    partie.count((err,count) => {
+      if (err) {
+        sys.put(err);
+      } else {
+        //récupére le nombre de partie au chargement du serveur.
+        numPartie = count;
+      }
+    });
     var server = app.listen(8080, function() {
       var adressHote = server.address().address;
       var portEcoute = server.address().port;

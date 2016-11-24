@@ -9,7 +9,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    var socket = io('http://10.1.1.111:8888/');
+    var socket = io('http://192.168.1.30:8888/');
+    // var socket = io('http://10.1.1.111:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
 
@@ -111,7 +112,7 @@
 
       //vérifie si la partie à déjà commencé
       if (data.start) {
-        // debutPartie();
+        debutPartie();
       }
 
     });
@@ -187,8 +188,18 @@
     //deconnect le joueur
     deconnection.addEventListener('submit', (event) => {
       event.preventDefault();
-      socket.emit('disconnect', {room: room, username: username});
+      socket.emit('disconnected', {room: room, username: username, numPlayer: numPlayer});
+        addChat('la partie est terminé!');
 
+    });
+
+    socket.on('remove player', (data) => {
+      if (data.end) {
+        addChat('la partie est terminé suite au départ de ' + data.username + '!');
+      } else {
+        playerListe[numPlayer] = undefined;
+        nbPlayer--;
+      }
     });
 
     send.addEventListener('submit', (event) => {
@@ -260,6 +271,7 @@
       if (username != data.username) {
         addChat(data.username + ' a selectionné la difficultée : ' + niveau[data.level - 1]);
       }
+      cartes = data.cartes;
       //début de la partie
       if (data.start){
         debutPartie ();
@@ -384,7 +396,7 @@
       objet.style.height = cartes.cartesObjet[numCartes].height;
 
       //ajout d'id
-      image.id = numPlayer;
+      jeton.id = numPlayer;
 
       //ajout dans le document
       jeton.appendChild(image);
@@ -430,17 +442,15 @@
       alert("Editer");
     }
 
-    function vision()
+    function vision(perso)
     {
-      alert("Editer");
+      choisCarte.joueur = perso.id;
     }
 
     var afficheImage = (element, hiddenShow) => {
       element.addEventListener('click', (event) => {clic(event)});
       function clic (event) {
         hiddenShow.classList.toggle('start');
-        console.log(hiddenShow);
-        console.log(hiddenShow.classList);
       };
     };
 
@@ -459,24 +469,24 @@
         d.style.left = xMousePosition + "px";
         d.style.top = yMousePosition + "px";
         d.addEventListener('mouseover', function (e) { this.style.cursor = 'pointer'; });
-        d.addEventListener('click', function (e) { element.parentNode.removeChild(d);  });
-        document.body.addEventListener('click', function (e) { element.parentNode.removeChild(d);  });
+        d.addEventListener('click', function (e) { d.parentNode.removeChild(d);  });
+        document.body.addEventListener('click', function (e) { d.parentNode.removeChild(d);  });
 
         var p = document.createElement('p');
         d.appendChild(p);
-        p.addEventListener('click', () => { OK(); });
+        p.addEventListener('click', function () { OK(); });
         p.setAttribute('class', 'ctxline');
         p.innerHTML = 'OK';
 
         var p1 = document.createElement('p');
         d.appendChild(p1);
-        p1.addEventListener('click', () =>  { NOK(); });
+        p1.addEventListener('click', function () { NOK(); });
         p1.setAttribute('class', 'ctxline');
         p1.innerHTML = 'NOK';
 
         var p2 = document.createElement('p');
         d.appendChild(p2);
-        p2.addEventListener('click', () =>  { vision(); });
+        p2.addEventListener('click', function () { vision(element); });
         p2.setAttribute('class', 'ctxline');
         p2.innerHTML = 'Choisisé une carte vision';
 
@@ -487,5 +497,6 @@
 
 
   var joueur = ['joueurQuatre', 'joueurTrois', 'joueurDeux', 'joueurSix', 'joueurCinq', 'joueurUn'];
+  var choisCarte = {};
 
 })(window, io);
