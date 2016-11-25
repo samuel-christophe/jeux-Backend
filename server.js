@@ -1,4 +1,4 @@
-
+'use strict'
 //chargement de express
 var express = require('express');
 var cartes = require('cartes');
@@ -221,7 +221,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
             };
           }
         }
-        rooms[room].fantom = false;
         //crée une room par player
         socket.join(data.username);
         //envoie du message au player
@@ -313,8 +312,12 @@ socketIOWebSocketServer.on('connection', (socket) => {
     //selection des personnnage
     if (data.choisPerso) {
       var allSelectPlayer = 0;
+      var plays = [];
+      for (var i = 1; i < rooms[data.room].playerListe.length; i++) {
+        plays[rooms[data.room].playerListe[i].joue] = rooms[data.room].playerListe[i].joue;
+      }
       //choix du fantome et le fantome n'a pas déjà été choisi
-      if ( data.perso == 'fantom' && !rooms[data.room].fantom && !rooms[data.room].playerListe[data.numPlayer].joue ) {
+      if ( data.perso == 'fantom' && plays['fantom'] == undefined && rooms[data.room].playerListe[data.numPlayer].joue == undefined) {
         //enregistre la valeur
         partie.updateOne({room : data.room}, { $set: {playerListe: rooms[data.room].playerListe} }, function(err, result) {
           if (err) {
@@ -331,9 +334,9 @@ socketIOWebSocketServer.on('connection', (socket) => {
         console.log(rooms[data.room]);
       } else {
         //vérifie si le fantome a déjà été choisi
-        if ( rooms[data.room].fantom ) {
+        if ( plays['fantom'] != undefined ) {
           //et que le joueur n'a pas déjà un personnage.
-          if ( !rooms[data.room].playerListe[data.numPlayer].joue ) {
+          if ( rooms[data.room].playerListe[data.numPlayer].joue == undefined ) {
             //enregistre la valeur
             partie.updateOne({room : data.room}, { $set: {playerListe: rooms[data.room].playerListe}}, function(err, result) {
               if (err) {
@@ -490,9 +493,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
   // socket.on("tryJoinCreate", onJoinCreateRoom)
   // socket.on("startgame", onStartGame)
 
-
 });
-
 
 function recupCartes (tabCarte, tab) {
   var listesCartes = [];
@@ -536,6 +537,12 @@ db.connect(url, function(err) {
         //récupére le nombre de partie au chargement du serveur.
         numPartie = count;
       }
+    });
+    partie.find({"start":{$exists:false},"end":{$exists:false}}, {_id: 0}).toArray(function(err, data) {
+      for (var i = 0; i < data.length; i++) {
+        rooms[data[i].room] = data[i];
+      };
+      console.log(rooms);
     });
     var server = app.listen(8080, function() {
       var adressHote = server.address().address;
@@ -592,7 +599,7 @@ var cartesPersonnages = [
 var cartesLieux = [
   cP('-391px', '-1561px', '381px', '251px', 'lieu 01.jpg'),
   cP(0, '-1561px', '380px', '250px', 'lieu 02.jpg'),
-  cP('-1563px', '1300px', '381px', '249px', 'lieu 03.jpg'),
+  cP('-1563px', '-1300px', '381px', '249px', 'lieu 03.jpg'),
   cP('-1172px', '-1300px', '381px', '251px', 'lieu 04.jpg'),
   cP('-783px', '-1300px', '381px', '251px', 'lieu 05.jpg'),
   cP('-391px', '-1301px', '381px', '251px', 'lieu 06.jpg'),

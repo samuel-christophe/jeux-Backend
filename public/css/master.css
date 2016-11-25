@@ -78,7 +78,7 @@ table {
 .heure{
 	width: 250px;
 	height: 308px;
-  top: 719px;
+  top: 952px;
 }
 .horloge{
   position: absolute;
@@ -102,6 +102,7 @@ table {
 }
 .grandeCarte{
   top: 0;
+  left: 0;
   z-index: 5;
 }
 .positionJoueur{

@@ -9,8 +9,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    var socket = io('http://192.168.1.30:8888/');
-    // var socket = io('http://10.1.1.111:8888/');
+    // var socket = io('http://192.168.1.30:8888/');
+    var socket = io('http://10.1.1.203:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
 
@@ -119,7 +119,7 @@
 
     //envoie de donné privé du serveur
     socket.on('cartes', (data) => {
-      console.log(data);
+      cartes = data;
     });
 
     socket.on('new player', (data) => {
@@ -306,7 +306,7 @@
       }
 
       //nav et send à déplacer
-      navigation.style.top = '900px';
+      navigation.style.top = '722px';
       textAffiche.classList.remove('div');
       textAffiche.classList.add('textAffiche');
       ecran.classList.add('image', 'background');
@@ -316,6 +316,7 @@
       var heure = document.createElement('div');
       var position = document.createElement('div');
       var horloge = document.createElement('img');
+      var vision = document.createElement('div');
       heure.classList.add('image', 'heure', 'couper');
       position.classList.add('position');
       horloge.classList.add('horloge');
@@ -324,24 +325,29 @@
       position.appendChild(heure);
       jeux.insertBefore(position, ecran);
       div.classList.add('avatar');
+      vision.classList.add('div');
 
       //si le joueur joue le fantom
       if (perso == 'fantom') {
-        var j = 0;
+        var numCartes = 0;
         for (var i = 1; i <= nbPlayer; i++) {
           if (i != numPlayer) {
-            avatar(div, playerListe[i], j);
-            j++;
+            carteFantom(div, playerListe[i], numCartes);
+            numCartes++;
           }
         }
+        for (var i = 0; i < cartes.vision.length; i++) {
+          visionFantom(vision, i);
+        }
         jeux.insertBefore(div, navigation);
+        jeux.insertBefore(vision, navigation);
 
       } else {
       }
     }
 
-    //ajoute l'avatar pour le fantom
-    function avatar (div, numPlayer, numCartes) {
+    //affichage des cartes des joueur pour le fantom fantom
+    function carteFantom (div, numPlayer, numCartes) {
       //créeation des éléments et ajout des cartes
       var voyant = document.createElement('div');
       var jeton = document.createElement('div');
@@ -420,7 +426,44 @@
       afficheImage(lieuxGrand, lieuxGrand);
       afficheImage(objetPetit, objetGrand);
       afficheImage(objetGrand, objetGrand);
-      contextmenu(jeton);
+      contextmenu(jeton, [2]);
+
+    };
+
+    //affichage des cartes des joueur pour le fantom fantom
+    function visionFantom (vision, numCartes) {
+      //créeation des éléments et ajout des cartes
+      var visionPetit = document.createElement('img');
+      var visionGrand = document.createElement('img');
+      var carte = document.createElement('div');
+
+      //ajout des src
+      visionPetit.src = 'image/spriteVisions.png';
+      visionGrand.src = 'image/carte vision/' + cartes.vision[numCartes].src;
+
+      //ajout des class
+      visionPetit.classList.add('image');
+      visionGrand.classList.add('image', 'start', 'grandeCarte');
+      carte.classList.add('div', 'couper', 'carte');
+
+      //positionnement
+      visionPetit.style.left = cartes.vision[numCartes].left;
+      visionPetit.style.top = cartes.vision[numCartes].top;
+      carte.style.width = cartes.vision[numCartes].width;
+      carte.style.height = cartes.vision[numCartes].height;
+
+      //ajout d'id
+      carte.id = numCartes;
+
+      //ajout dans le document
+      carte.appendChild(visionPetit);
+      vision.appendChild(carte);
+      jeux.appendChild(visionGrand);
+
+      //ajout des événements
+      afficheImage(visionPetit, visionGrand);
+      afficheImage(visionGrand, visionGrand);
+      contextmenu(vision, [3]);
 
     };
 
@@ -435,17 +478,37 @@
     function OK()
     {
       alert("Renommer");
-    }
+    };
 
     function NOK()
     {
       alert("Editer");
-    }
+    };
 
-    function vision(perso)
+    function Perso(perso)
     {
-      choisCarte.joueur = perso.id;
-    }
+      if ( choisCarte.vision != undefined) {
+        choisCarte.joueur = perso.id;
+        choisCarte.vision[numVision.id] = cartes.vision[numVision.id];
+        console.log(choisCarte);
+      } else {
+        addChat('Vous devez selectionner au moins une carte vision.');
+      }
+    };
+
+    function vision(numVision)
+    {
+      choisCarte.vision[numVision.id] = cartes.vision[numVision.id];
+      console.log(choisCarte);
+    };
+
+    function supVision(numVision)
+    {
+      if (choisCarte.vision[numVision.id] != undefined) {
+        choisCarte.vision[numVision.id] = undefined;
+        console.log(choisCarte);
+      }
+    };
 
     var afficheImage = (element, hiddenShow) => {
       element.addEventListener('click', (event) => {clic(event)});
@@ -454,7 +517,7 @@
       };
     };
 
-    var contextmenu = (element) => {
+    var contextmenu = (element, arrayRightClic) => {
       element.addEventListener('contextmenu', (event) => {rightClic(event)});
       function rightClic (event){
         event.preventDefault();
@@ -472,24 +535,42 @@
         d.addEventListener('click', function (e) { d.parentNode.removeChild(d);  });
         document.body.addEventListener('click', function (e) { d.parentNode.removeChild(d);  });
 
-        var p = document.createElement('p');
-        d.appendChild(p);
-        p.addEventListener('click', function () { OK(); });
-        p.setAttribute('class', 'ctxline');
-        p.innerHTML = 'OK';
+        //liste du menu contextuel
+        var menu = [function(){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { OK(); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'OK';
+          },function(){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { NOK(); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'NOK';
+          },function(){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { Perso(element); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'Envoyer les cartes vision selectionner';
+          },function(){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { vision(element); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'Ajouter cette carte à la vision';
+          },function(){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { supVision(element); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'supprimer la varte de la vision';
+          }];
 
-        var p1 = document.createElement('p');
-        d.appendChild(p1);
-        p1.addEventListener('click', function () { NOK(); });
-        p1.setAttribute('class', 'ctxline');
-        p1.innerHTML = 'NOK';
-
-        var p2 = document.createElement('p');
-        d.appendChild(p2);
-        p2.addEventListener('click', function () { vision(element); });
-        p2.setAttribute('class', 'ctxline');
-        p2.innerHTML = 'Choisisé une carte vision';
-
+        for (var i = 0; i < arrayRightClic.length; i++) {
+          menu[arrayRightClic[i]]();
+        }
         return false;
       }
     };
@@ -497,6 +578,6 @@
 
 
   var joueur = ['joueurQuatre', 'joueurTrois', 'joueurDeux', 'joueurSix', 'joueurCinq', 'joueurUn'];
-  var choisCarte = {};
+  var choisCarte = {vision:[]};
 
 })(window, io);
