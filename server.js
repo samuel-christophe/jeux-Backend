@@ -227,7 +227,8 @@ socketIOWebSocketServer.on('connection', (socket) => {
           nbPlayer: result.nbPlayer,
           cartes: cartes,
           visionPlayer : visionPlayer,
-          tour : tour || null
+          tour : tour || null,
+          corbeau : corbeau || null
         });
         // Let the existing players in room know there is a new player
         // TODO -- Add room number to this / Player class
@@ -364,6 +365,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
           data.start = true;
           data.tour = 1;
           data.corbeau = nbCorbeau[rooms[data.room].level];
+          rooms[data.room].corbeau = data.corbeau;
           rooms[data.room].listesCartes = cartes.get(rooms[data.room].level, rooms[data.room].nbPlayer);
           rooms[data.room].vision = cartes.vision(vision);
           rooms[data.room].listesCartes.cardVision = rooms[data.room].vision.slice(0,7);
@@ -376,7 +378,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
           });
           //enregistre que la partie à commencé pour tous les joueurs
           for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-            users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true} }, function(err, result) {
+            users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true, corbeau: data.corbeau} }, function(err, result) {
               if (err) {
                 console.log(err);
               }
@@ -425,8 +427,9 @@ socketIOWebSocketServer.on('connection', (socket) => {
   //modifi la main de vision
   socket.on('modify card', function (data) {
 
-    if ( (rooms[room].playerListe[numPlayer].joue = 'fantom') && (rooms[room].corbeau > 0) ) {
-      rooms[room].corbeau--;
+    if ( (rooms[data.room].playerListe[data.numPlayer].joue = 'fantom') && (rooms[data.room].corbeau > 0) ) {
+      rooms[data.room].corbeau--;
+      rooms[data.room].listesCartes.cardVision = [];
       //ajoute les nouvelles cartes et supprime celle de la pile vision
       for (var i = 0; i < 7; i++) {
         rooms[data.room].listesCartes.cardVision.push(rooms[data.room].vision[0]);
@@ -438,7 +441,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit('receive card', visionFantom);
       //enregistre les cartes vision du joueur
       var partie = db.get().collection('partie');
-      partie.updateOne({room:data.room}, { $set: { listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, corbeau: rooms[room].corbeau } }, function(err,result){});
+      partie.updateOne({room:data.room}, { $set: { listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, corbeau: rooms[data.room].corbeau } }, function(err,result){});
     }
   });
 
@@ -454,11 +457,11 @@ socketIOWebSocketServer.on('connection', (socket) => {
     data.choisCarte.vision.forEach(function (item, index, array) {
       if (item) {
         cardSend.push(rooms[data.room].listesCartes.cardVision[index]);
-        if (rooms[data.room].playerListe[data.numPlayer].vision) {
-          rooms[data.room].playerListe[data.numPlayer].vision.push(index);
+        if (rooms[data.room].playerListe[data.perso].vision) {
+          rooms[data.room].playerListe[data.perso].vision.push(index);
         } else {
-          rooms[data.room].playerListe[data.numPlayer].vision = [];
-          rooms[data.room].playerListe[data.numPlayer].vision.push(index);
+          rooms[data.room].playerListe[data.perso].vision = [];
+          rooms[data.room].playerListe[data.perso].vision.push(index);
         }
         nbCardSend++;
       }
@@ -476,17 +479,18 @@ socketIOWebSocketServer.on('connection', (socket) => {
 
     //parcour la liste des joueur pour vérifier ceux ayant eux leur visions.
     for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-      if (rooms[data.room].playerListe[i].vision) {
+      if ( rooms[data.room].playerListe[i].vision && (rooms[data.room].playerListe[i].joue != 'fantom') ) {
         playerVision++;
       }
     }
 
     //récupérer les cartes pour les envoyer
     visionFantom = recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision);
-    vision = recupCartes(carteVisions, rooms[data.room].playerListe[data.numPlayer].vision);
+    vision = recupCartes(carteVisions, rooms[data.room].playerListe[data.perso].vision);
 
     //vérifie si le tour est fini
-    if (playerVision < rooms[data.room].playerListe.length) {
+    if (playerVision < (rooms[data.room].playerListe.length - 2) ) {
+      console.log('je ne change pas de tour.');
       //enregistre les cartes vision du joueur
       partie.updateOne({room:data.room}, { $set: { listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, tour : rooms[data.room].tour } }, function(err,result){});
       data.endTour = false;
@@ -503,7 +507,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
     }
 
     // Envoi d'un message au client WebSocket.
-    socketIOWebSocketServer.in(data.room).emit('receive card', {joueur: data.numPlayer, vision: vision});
+    socketIOWebSocketServer.in(data.room).emit('receive card', {joueur: data.perso, vision: vision});
     socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit('receive card', visionFantom)
   });
 
@@ -526,6 +530,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
         data.start = true;
         data.tour = 1;
         data.corbeau = nbCorbeau[data.level];
+        rooms[data.room].corbeau = data.corbeau;
         rooms[data.room].listesCartes = cartes.get(rooms[data.room].level, rooms[data.room].nbPlayer);
         rooms[data.room].vision = cartes.vision(vision);
         rooms[data.room].listesCartes.cardVision = rooms[data.room].vision.slice(0,7);

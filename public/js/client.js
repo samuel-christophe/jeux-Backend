@@ -2,8 +2,7 @@
   //Au chargement du document
   window.addEventListener('DOMContentLoaded',() => {
 
-    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, nbPlayer, cartes, div, heure, aiguille, vision, tour, corbeau, niveau;
-    var corbeauUse = true;
+    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, nbPlayer, cartes, div, heure, aiguille, vision, tour, niveau;
     var playerListe = [];
     /**
       Établissement d'une nouvelle connexion WebSocket vers le serveur
@@ -283,6 +282,9 @@
           visionFantom(vision, i);
         }
         jeux.insertBefore(vision, navigation);
+        if (data.endTour) {
+          addChat('tous les personnage on eux leur cartes');
+        }
       } else {
       }
     });
@@ -575,7 +577,7 @@
         if (!choisCarte.listesJoueur.includes(perso)) {
           choisCarte.listesJoueur.push(perso);
           choisCarte.joueur = perso;
-          socket.emit('send card', {numPlayer: numPlayer, choisCarte: choisCarte, room: room});
+          socket.emit('send card', {numPlayer: numPlayer, perso: perso, choisCarte: choisCarte, room: room});
         } else {
           addChat('vous avez déjas envoyé des cartes vision au joueur: ' + perso);
         }
@@ -603,9 +605,6 @@
     //changer les cartes vision
     function changeVision()
     {
-      console.log(corbeau);
-      console.log(corbeauUse);
-      console.log((corbeau > 0) && corbeauUse);
       if ((corbeau > 0) && corbeauUse) {
         socket.emit('modify card', {room: room, numPlayer: numPlayer});
         corbeau--;
@@ -692,5 +691,7 @@
 
   var joueur = ['joueurQuatre', 'joueurTrois', 'joueurDeux', 'joueurSix', 'joueurCinq', 'joueurUn'];
   var choisCarte = {vision:[],listesJoueur:[]};
+  var corbeau;
+  var corbeauUse = true;
 
 })(window, io);
