@@ -27,6 +27,36 @@
   left: -320px;
   top: -262px;
 }
+.corbeauUn{
+  left: 0;
+  top: -442px;
+}
+.corbeauDeux{
+  left: -275px;
+  top: -398px;
+}
+.corbeauTrois{
+  left: -494px;
+  top: -412px;
+}
+.corbeauDivUn{
+  left: 750px;
+  top: 980px;
+	width: 265px;
+	height: 160px;
+}
+.corbeauDivDeux{
+  left: 530px;
+  top: 980px;
+	width: 209px;
+	height: 204px;
+}
+.corbeauDivTrois{
+  left: 270px;
+  top: 980px;
+	width: 245px;
+	height: 190px;
+}
 .ctxmenu
 {
   position:absolute;

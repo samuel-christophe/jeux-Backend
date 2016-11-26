@@ -2,15 +2,16 @@
   //Au chargement du document
   window.addEventListener('DOMContentLoaded',() => {
 
-    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, nbPlayer, cartes;
+    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, nbPlayer, cartes, div, heure, aiguille, vision, tour, corbeau, niveau;
+    var corbeauUse = true;
     var playerListe = [];
     /**
       Établissement d'une nouvelle connexion WebSocket vers le serveur
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    // var socket = io('http://192.168.1.30:8888/');
-    var socket = io('http://10.1.1.203:8888/');
+    var socket = io('http://192.168.1.30:8888/');
+    // var socket = io('http://10.1.1.203:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
 
@@ -73,12 +74,12 @@
       A chaque message reçu, on affiche les données
       obtenues dans la console du navigateur Internet.
       **/
-      console.log(data);
       cartes = data.cartes;
       room = data.room;
       numPlayer = data.numPlayer;
       perso = data.joue;
       nbPlayer = data.nbPlayer;
+      tour = data.tour || 1;
 
       //enregistre les joueurs
       if ( data.playerListe ) {
@@ -112,6 +113,7 @@
 
       //vérifie si la partie à déjà commencé
       if (data.start) {
+        corbeau = data.corbeau;
         debutPartie();
       }
 
@@ -209,8 +211,12 @@
       on envoi un message à travers la connexion WebSocket.
       **/
       if (message.value) {
-        socket.emit('chat', { room: room, username: username, texte: message.value });
-        addChat(username + ' à dit: ' + message.value);
+        if (perso != 'fantom' || perso == undefined) {
+          socket.emit('chat', { room: room, username: username, texte: message.value });
+          addChat(username + ' à dit: ' + message.value);
+        } else {
+          addChat('en tant que fantom vous ne pouvez plus parler.');
+        }
       } else {
         pseudo.placeholder = 'Veuiller sésir au minumum un caractère';
       }
@@ -244,6 +250,7 @@
         }
         //début de la partie
         if (data.start){
+          corbeau = data.corbeau;
           debutPartie ();
         }
       }
@@ -263,17 +270,32 @@
         addChat(data.username + ' à dit: ' + data.texte);
       }
     });
+
+    //reception des cartes vision.
+    socket.on('receive card', (data) => {
+
+      //si le joueur joue le fantom
+      if (perso == 'fantom') {
+        cartes.vision = data;
+        vision.innerHTML = '';
+        //mise à jour des cartes visions
+        for (var i = 0; i < cartes.vision.length; i++) {
+          visionFantom(vision, i);
+        }
+        jeux.insertBefore(vision, navigation);
+      } else {
+      }
+    });
+
+    //selection de la difficulté
     socket.on('levelSelect', (data) => {
-      /**
-      A chaque message reçu, on affiche les données
-      obtenues dans la console du navigateur Internet.
-      **/
       if (username != data.username) {
         addChat(data.username + ' a selectionné la difficultée : ' + niveau[data.level - 1]);
       }
       cartes = data.cartes;
       //début de la partie
       if (data.start){
+        corbeau = data.corbeau;
         debutPartie ();
       }
     });
@@ -287,8 +309,10 @@
       p.appendChild(newContent); //add the text node to the newly created div.
       chat.appendChild(p);
     };
+
     //chois de la difficulté
     var level = (level) => {
+      niveau = level;
       socket.emit('level', {room: room, username: username, level: level});
       facileLI.parentNode.removeChild(facileLI);
       moyenLI.parentNode.removeChild(moyenLI);
@@ -312,16 +336,30 @@
       ecran.classList.add('image', 'background');
       jeux.appendChild(ecran);
 
-      var div = document.createElement('div');
-      var heure = document.createElement('div');
+      //création des éléments
+      div = document.createElement('div');
+      heure = document.createElement('div');
+      vision = document.createElement('div');
+      aiguille = document.createElement('img');
+      var aiguilleHeure = document.createElement('div');
       var position = document.createElement('div');
       var horloge = document.createElement('img');
-      var vision = document.createElement('div');
+
+      //ajout des class
       heure.classList.add('image', 'heure', 'couper');
+      aiguilleHeure.classList.add('image', 'couper', 'ah1');
+      aiguille.classList.add('image', 'a1');
       position.classList.add('position');
       horloge.classList.add('horloge');
+
+      //ajout des images
+      aiguille.src = 'image/plateau.png';
       horloge.src = 'image/plateau.png';
+
+      //ajout des éléments
+      aiguilleHeure.appendChild(aiguille);
       heure.appendChild(horloge);
+      heure.appendChild(aiguilleHeure);
       position.appendChild(heure);
       jeux.insertBefore(position, ecran);
       div.classList.add('avatar');
@@ -332,12 +370,51 @@
         var numCartes = 0;
         for (var i = 1; i <= nbPlayer; i++) {
           if (i != numPlayer) {
-            carteFantom(div, playerListe[i], numCartes);
+            carteFantom(div, i, numCartes);
             numCartes++;
           }
         }
         for (var i = 0; i < cartes.vision.length; i++) {
           visionFantom(vision, i);
+        }
+        if (niveau == 2) {
+          var divCorbeau1 = document.createElement('div');
+          var imageCorbeau1 = document.createElement('img');
+          var divCorbeau2 = document.createElement('div');
+          var imageCorbeau2 = document.createElement('img');
+          var divCorbeau3 = document.createElement('div');
+          var imageCorbeau3 = document.createElement('img');
+
+          divCorbeau1.classList.add('image', 'couper', 'corbeauDivTrois');
+          imageCorbeau1.classList.add('image', 'corbeauTrois');
+          divCorbeau2.classList.add('image', 'couper', 'corbeauDivDeu');
+          imageCorbeau2.classList.add('image', 'corbeauDeux');
+          divCorbeau3.classList.add('image', 'couper', 'corbeauUn');
+          imageCorbeau3.classList.add('image', 'corbeauDivUn');
+
+          imageCorbeau1.src = 'image/sprite plateau fantom.png';
+          imageCorbeau2.src = 'image/sprite plateau fantom.png';
+          imageCorbeau3.src = 'image/sprite plateau fantom.png';
+
+          divCorbeau1.appendChild(imageCorbeau1);
+          position.appendChild(divCorbeau1);
+          divCorbeau2.appendChild(imageCorbeau2);
+          position.appendChild(divCorbeau2);
+          divCorbeau3.appendChild(imageCorbeau3);
+          position.appendChild(divCorbeau3);
+        } else {
+          var divCorbeau = document.createElement('div');
+          var imageCorbeau = document.createElement('img');
+
+          divCorbeau.classList.add('image', 'couper', 'corbeauDivTrois');
+          imageCorbeau.classList.add('image', 'corbeauTrois');
+
+          imageCorbeau.src = 'image/sprite plateau fantom.png';
+
+          divCorbeau.appendChild(imageCorbeau);
+          position.appendChild(divCorbeau);
+
+          contextmenu(divCorbeau, [5]);
         }
         jeux.insertBefore(div, navigation);
         jeux.insertBefore(vision, navigation);
@@ -346,7 +423,7 @@
       }
     }
 
-    //affichage des cartes des joueur pour le fantom fantom
+    //affichage des cartes des joueur pour le fantom
     function carteFantom (div, numPlayer, numCartes) {
       //créeation des éléments et ajout des cartes
       var voyant = document.createElement('div');
@@ -381,7 +458,7 @@
       perso.classList.add('couper', 'carte');
       lieux.classList.add('couper', 'carte');
       objet.classList.add('couper', 'carte');
-      image.classList.add('image', joueur[numPlayer -1]);
+      image.classList.add('image', joueur[playerListe[numPlayer] -1]);
       jeton.classList.add('div', 'jetonFantome', 'couper');
       voyant.classList.add('div', 'voyant');
 
@@ -463,7 +540,7 @@
       //ajout des événements
       afficheImage(visionPetit, visionGrand);
       afficheImage(visionGrand, visionGrand);
-      contextmenu(vision, [3]);
+      contextmenu(carte, [3,4]);
 
     };
 
@@ -485,31 +562,60 @@
       alert("Editer");
     };
 
+    //envoyer les vision au personnage
     function Perso(perso)
     {
-      if ( choisCarte.vision != undefined) {
-        choisCarte.joueur = perso.id;
-        choisCarte.vision[numVision.id] = cartes.vision[numVision.id];
-        console.log(choisCarte);
+      var verifiPresenceUneCarte = false;
+      for (var i = 0; i < choisCarte.vision.length; i++) {
+        if (choisCarte.vision[i] != null) {
+          verifiPresenceUneCarte = true;
+        }
+      }
+      if ( verifiPresenceUneCarte ) {
+        if (!choisCarte.listesJoueur.includes(perso)) {
+          choisCarte.listesJoueur.push(perso);
+          choisCarte.joueur = perso;
+          socket.emit('send card', {numPlayer: numPlayer, choisCarte: choisCarte, room: room});
+        } else {
+          addChat('vous avez déjas envoyé des cartes vision au joueur: ' + perso);
+        }
       } else {
         addChat('Vous devez selectionner au moins une carte vision.');
       }
     };
 
-    function vision(numVision)
+    //ajouter une carte vision
+    function visionListe(numVision)
     {
-      choisCarte.vision[numVision.id] = cartes.vision[numVision.id];
-      console.log(choisCarte);
+      choisCarte.vision[numVision] = true;
     };
 
+    //supprimer une carte vision
     function supVision(numVision)
     {
-      if (choisCarte.vision[numVision.id] != undefined) {
-        choisCarte.vision[numVision.id] = undefined;
-        console.log(choisCarte);
+      if (choisCarte.vision[numVision] != null) {
+        choisCarte.vision[numVision] = null;
+      } else {
+        addChat('Cette carte n\'a pas été selectionné');
       }
     };
 
+    //changer les cartes vision
+    function changeVision()
+    {
+      console.log(corbeau);
+      console.log(corbeauUse);
+      console.log((corbeau > 0) && corbeauUse);
+      if ((corbeau > 0) && corbeauUse) {
+        socket.emit('modify card', {room: room, numPlayer: numPlayer});
+        corbeau--;
+        corbeauUse = false;
+      } else {
+        addChat('Vous ne pouvez plus changer vos cartes');
+      }
+    };
+
+    //affiche les image grande ou les cache
     var afficheImage = (element, hiddenShow) => {
       element.addEventListener('click', (event) => {clic(event)});
       function clic (event) {
@@ -517,7 +623,8 @@
       };
     };
 
-    var contextmenu = (element, arrayRightClic) => {
+    //ajoute un menu contextuel
+    var contextmenu = function (element, arrayRightClic) {
       element.addEventListener('contextmenu', (event) => {rightClic(event)});
       function rightClic (event){
         event.preventDefault();
@@ -536,40 +643,46 @@
         document.body.addEventListener('click', function (e) { d.parentNode.removeChild(d);  });
 
         //liste du menu contextuel
-        var menu = [function(){
+        var menu = [function(element){
             var p = document.createElement('p');
             d.appendChild(p);
-            p.addEventListener('click', function () { OK(); });
+            p.addEventListener('click', function () { OK(element); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'OK';
-          },function(){
+          },function(element){
             var p = document.createElement('p');
             d.appendChild(p);
-            p.addEventListener('click', function () { NOK(); });
+            p.addEventListener('click', function () { NOK(element); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'NOK';
-          },function(){
+          },function(element){
             var p = document.createElement('p');
             d.appendChild(p);
             p.addEventListener('click', function () { Perso(element); });
             p.setAttribute('class', 'ctxline');
-            p.innerHTML = 'Envoyer les cartes vision selectionner';
-          },function(){
+            p.innerHTML = 'Envoyer les cartes vision selectionné';
+          },function(element){
             var p = document.createElement('p');
             d.appendChild(p);
-            p.addEventListener('click', function () { vision(element); });
+            p.addEventListener('click', function () { visionListe(element); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'Ajouter cette carte à la vision';
-          },function(){
+          },function(element){
             var p = document.createElement('p');
             d.appendChild(p);
             p.addEventListener('click', function () { supVision(element); });
             p.setAttribute('class', 'ctxline');
-            p.innerHTML = 'supprimer la varte de la vision';
+            p.innerHTML = 'Supprimer la carte de la vision';
+          },function(element){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { changeVision(element); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'Changer vos cartes vision';
           }];
 
         for (var i = 0; i < arrayRightClic.length; i++) {
-          menu[arrayRightClic[i]]();
+          menu[arrayRightClic[i]](element.id);
         }
         return false;
       }
@@ -578,6 +691,6 @@
 
 
   var joueur = ['joueurQuatre', 'joueurTrois', 'joueurDeux', 'joueurSix', 'joueurCinq', 'joueurUn'];
-  var choisCarte = {vision:[]};
+  var choisCarte = {vision:[],listesJoueur:[]};
 
 })(window, io);
