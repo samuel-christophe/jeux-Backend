@@ -67,13 +67,13 @@ table {
   width: 208px;
 }
 .point4{
-	left: -580px;
-	top: -385px;
-}
-.point6{
   left: -788px;
   top: -385px;
   z-index: -1;
+}
+.point6{
+	left: -580px;
+	top: -385px;
 }
 .heure{
 	width: 250px;
@@ -117,7 +117,7 @@ table {
 	height: 635px;
 }
 .position{
-	width: 1900px;
+	width: 2100px;
 }
 .perso{
   position: absolute;
@@ -145,8 +145,8 @@ table {
 	height: 152px;
 }
 .etuit{
-  margin-top: 33px;
-	width: 128px;
+  margin-top: 40px;
+	width: 131px;
 	height: 119px;
 }
 #joueurMauve{

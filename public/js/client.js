@@ -310,6 +310,7 @@
       var newContent = document.createTextNode(mes);
       p.appendChild(newContent); //add the text node to the newly created div.
       chat.appendChild(p);
+      window.setTimeout(function(){p.parentNode.removeChild(p);}, 10000);
     };
 
     //chois de la difficulté
@@ -332,7 +333,6 @@
       }
 
       //nav et send à déplacer
-      navigation.style.top = '722px';
       textAffiche.classList.remove('div');
       textAffiche.classList.add('textAffiche');
       ecran.classList.add('image', 'background');
@@ -369,6 +369,7 @@
 
       //si le joueur joue le fantom
       if (perso == 'fantom') {
+        navigation.style.top = '722px';
         var numCartes = 0;
         for (var i = 1; i <= nbPlayer; i++) {
           if (i != numPlayer) {
@@ -404,6 +405,10 @@
           position.appendChild(divCorbeau2);
           divCorbeau3.appendChild(imageCorbeau3);
           position.appendChild(divCorbeau3);
+
+          contextmenu(divCorbeau1, [5]);
+          contextmenu(divCorbeau2, [5]);
+          contextmenu(divCorbeau3, [5]);
         } else {
           var divCorbeau = document.createElement('div');
           var imageCorbeau = document.createElement('img');
@@ -419,10 +424,116 @@
           contextmenu(divCorbeau, [5]);
         }
         jeux.insertBefore(div, navigation);
-        jeux.insertBefore(vision, navigation);
-
       } else {
+        navigation.style.left = '1450px';
+        navigation.style.top = '1200px';
+        textAffiche.classList.remove('textAffiche');
+        textAffiche.classList.add('textAfficheVoyant');
+        deconnection.style.right = '10%';
+        deconnection.style.top = '1170px';
+        heure.style.left = '600px';
+        heure.style.top = '1175px';
+        div.classList.remove('avatar');
+        //affichage des voyant
+        for (var i = 1; i <= nbPlayer; i++) {
+          if (playerListe[i] != 'fantom') {
+            avatarVoyant(div, i, (playerListe[i].joue - 1));
+          }
+        }
+        var positionVoyant = document.createElement('div');
+        var personnage = document.createElement('div');
+        var personnageDiv = document.createElement('div');
+        var personnageImage = document.createElement('img');
+        var personnage1 = document.createElement('div');
+        var personnage2 = document.createElement('div');
+        var lieux = document.createElement('div');
+        var lieuxDiv = document.createElement('div');
+        var lieuxImage = document.createElement('img');
+        var lieux1 = document.createElement('div');
+        var lieux2 = document.createElement('div');
+        var objet = document.createElement('div');
+        var objetDiv = document.createElement('div');
+        var objetImage = document.createElement('img');
+        var objet1 = document.createElement('div');
+
+        positionVoyant.classList.add('position');
+        personnage.classList.add('div', 'positionJoueur', 'couper');
+        personnageDiv.classList.add('image', 'centre');
+        personnageImage.classList.add('image', 'perso');
+        personnage1.classList.add('div');
+        personnage2.classList.add('div');
+        lieux.classList.add('div', 'positionJoueur', 'couper');
+        lieuxDiv.classList.add('image', 'centre');
+        lieuxImage.classList.add('image', 'lieu');
+        lieux1.classList.add('div');
+        lieux2.classList.add('div');
+        objet.classList.add('div', 'positionJoueur', 'couper');
+        objetDiv.classList.add('image', 'centre');
+        objetImage.classList.add('image', 'objet');
+        objet1.classList.add('div');
+
+        personnageImage.src = 'image/plateau.png';
+        lieuxImage.src = 'image/plateau.png';
+        objetImage.src = 'image/plateau.png';
+
+        personnageDiv.appendChild(personnageImage);
+        personnage.appendChild(personnageDiv);
+        lieuxDiv.appendChild(lieuxImage);
+        lieux.appendChild(lieuxDiv);
+        objetDiv.appendChild(objetImage);
+        objet.appendChild(objetDiv);
+        positionVoyant.appendChild(personnage);
+        positionVoyant.appendChild(personnage1);
+        positionVoyant.appendChild(personnage2);
+        positionVoyant.appendChild(lieux);
+        positionVoyant.appendChild(lieux1);
+        positionVoyant.appendChild(lieux2);
+        positionVoyant.appendChild(objet);
+        positionVoyant.appendChild(objet1);
+
+        //parcour la liste des cartes pour les afficher
+        for (var numCartes = 0; numCartes < cartes.personnages.length; numCartes++) {
+          if (numCartes < 5) {
+            carteVoyant(numCartes, personnage1, lieux1, objet1);
+          } else {
+            carteVoyant(numCartes, personnage2, lieux2, objet1);
+          }
+        }
+        //ajout des points si 4 joueur ou plus
+        if (nbPlayer > 3) {
+          var point = document.createElement('div');
+          var pointInt = document.createElement('div');
+          var point6 = document.createElement('img');
+
+          point.classList.add('div', 'point');
+          pointInt.classList.add('image', 'pointInt');
+          point6.classList.add('image', 'point6');
+
+          point6.src = 'image/plateau.png';
+
+          pointInt.appendChild(point6);
+
+          //ajout du plateau de point à plus de 6 joueur
+          if (nbPlayer < 6) {
+            var point4 = document.createElement('img');
+            point4.classList.add('image', 'point4');
+            point4.src = 'image/plateau.png';
+            pointInt.appendChild(point4);
+          }
+          point.appendChild(pointInt);
+          //parcour la liste des joueurs pour afficher leur points
+          for (var i = 1; i <= nbPlayer; i++) {
+            if (playerListe[i] != 'fantom') {
+              var carreJoueur = document.createElement('div');
+              var pointJoueur = document.createElement('image');
+            }
+          }
+        }
+        jeux.insertBefore(div, navigation);
+        jeux.insertBefore(positionVoyant, navigation);
+        jeux.insertBefore(point, navigation);
       }
+      jeux.insertBefore(vision, navigation);
     }
 
     //affichage des cartes des joueur pour le fantom
@@ -506,6 +617,110 @@
       afficheImage(objetPetit, objetGrand);
       afficheImage(objetGrand, objetGrand);
       contextmenu(jeton, [2]);
+
+    };
+    //affichage des cartes des joueur
+    function carteVoyant (numCartes, personnage, lieux1, objet1) {
+      //créeation des éléments et ajout des cartes
+      var persoPetit = document.createElement('img');
+      var persoGrand = document.createElement('img');
+      var lieuxPetit = document.createElement('img');
+      var lieuxGrand = document.createElement('img');
+      var objetPetit = document.createElement('img');
+      var objetGrand = document.createElement('img');
+      var perso = document.createElement('div');
+      var lieux = document.createElement('div');
+      var objet = document.createElement('div');
+
+      //ajout des src
+      persoPetit.src = 'image/sprite carte.png';
+      lieuxPetit.src = 'image/sprite carte.png';
+      objetPetit.src = 'image/sprite carte.png';
+      persoGrand.src = 'image/carte personnage/' + cartes.personnages[numCartes].src;
+      lieuxGrand.src = 'image/cartes lieu/' + cartes.cartesLieux[numCartes].src;
+      objetGrand.src = 'image/carte objet/' + cartes.cartesObjet[numCartes].src;
+
+      //ajout des class
+      persoPetit.classList.add('image');
+      lieuxPetit.classList.add('image');
+      objetPetit.classList.add('image');
+      persoGrand.classList.add('image', 'start', 'grandeCarte');
+      lieuxGrand.classList.add('image', 'start', 'grandeCarte');
+      objetGrand.classList.add('image', 'start', 'grandeCarte');
+      perso.classList.add('couper', 'carte');
+      lieux.classList.add('couper', 'carte');
+      objet.classList.add('couper', 'carte');
+
+      //positionnement
+      persoPetit.style.left = cartes.personnages[numCartes].left;
+      persoPetit.style.top = cartes.personnages[numCartes].top;
+      perso.style.width = cartes.personnages[numCartes].width;
+      perso.style.height = cartes.personnages[numCartes].height;
+
+      lieuxPetit.style.left = cartes.cartesLieux[numCartes].left;
+      lieuxPetit.style.top = cartes.cartesLieux[numCartes].top;
+      lieux.style.width = cartes.cartesLieux[numCartes].width;
+      lieux.style.height = cartes.cartesLieux[numCartes].height;
+
+      objetPetit.style.left = cartes.cartesObjet[numCartes].left;
+      objetPetit.style.top = cartes.cartesObjet[numCartes].top;
+      objet.style.width = cartes.cartesObjet[numCartes].width;
+      objet.style.height = cartes.cartesObjet[numCartes].height;
+
+      //ajout d'id
+      perso.id = 'perso' + numCartes;
+      lieux.id = 'lieux' + numCartes;
+      objet.id = 'objet' + numCartes;
+
+      //ajout dans le document
+      perso.appendChild(persoPetit);
+      lieux.appendChild(lieuxPetit);
+      objet.appendChild(objetPetit);
+      personnage.appendChild(perso);
+      lieux1.appendChild(lieux);
+      objet1.appendChild(objet);
+      jeux.appendChild(persoGrand);
+      jeux.appendChild(lieuxGrand);
+      jeux.appendChild(objetGrand);
+
+      //ajout des événements
+      afficheImage(persoPetit, persoGrand);
+      afficheImage(persoGrand, persoGrand);
+      afficheImage(lieuxPetit, lieuxGrand);
+      afficheImage(lieuxGrand, lieuxGrand);
+      afficheImage(objetPetit, objetGrand);
+      afficheImage(objetGrand, objetGrand);
+      contextmenu(persoPetit, [7]);
+      contextmenu(objetPetit, [7]);
+      contextmenu(lieuxPetit, [7]);
+
+    };
+    //position des voyant
+    function avatarVoyant (div, numPlayer, numCartes) {
+      //créeation des éléments et ajout des cartes
+      var voyant = document.createElement('div');
+      var jeton = document.createElement('div');
+      var image = document.createElement('img');
+
+      //ajout des src
+      image.src = 'image/plateau.png';
+
+      //ajout des class
+      image.classList.add('image');
+      jeton.classList.add('div', 'etuit', 'couper');
+      voyant.classList.add('div', 'voyant');
+
+      //ajout d'id
+      jeton.id = numPlayer;
+      image.id = joueurVoyant[playerListe[numPlayer] -1];
+
+      //ajout dans le document
+      jeton.appendChild(image);
+      voyant.appendChild(jeton);
+      div.appendChild(voyant);
+
+      //ajout des événements
+      contextmenu(jeton, [6]);
 
     };
 
@@ -614,7 +829,19 @@
       }
     };
 
-    //affiche les image grande ou les cache
+    //affiche les cartes vision
+    function voirCarte()
+    {
+      //code
+    };
+
+    //positionner le jeton voyant
+    function voirCarte()
+    {
+      //code
+    };
+
+    //affiche les images grande ou les cache
     var afficheImage = (element, hiddenShow) => {
       element.addEventListener('click', (event) => {clic(event)});
       function clic (event) {
@@ -678,6 +905,18 @@
             p.addEventListener('click', function () { changeVision(element); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'Changer vos cartes vision';
+          },function(element){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { voirCarte(element); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'Voir vos cartes vision';
+          },function(element){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { position(element); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'Positionner votre jeton ici.';
           }];
 
         for (var i = 0; i < arrayRightClic.length; i++) {
@@ -690,6 +929,7 @@
 
 
   var joueur = ['joueurQuatre', 'joueurTrois', 'joueurDeux', 'joueurSix', 'joueurCinq', 'joueurUn'];
+  var joueurVoyant = ['joueurNoir', 'joueurBleu', 'joueurJaune', 'joueurBlanc', 'joueurRouge', 'joueurMauve'];
   var choisCarte = {vision:[],listesJoueur:[]};
   var corbeau;
   var corbeauUse = true;

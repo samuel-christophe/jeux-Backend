@@ -100,7 +100,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
           //enregistre le rôle
           if (result.joue) {
             joue = result.joue;
-            if (joue = 'fantom') {
+            if (joue == 'fantom') {
               corbeau = result.corbeau;
             }
           }
@@ -302,7 +302,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
   socket.on('unJoueur', (data) => {
 
     // Affichage du message reçu dans la console.
-    console.log(data);
 
     // Connection collection
     var partie = db.get().collection('partie');
@@ -330,7 +329,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
         });
         rooms[data.room].fantom = true;
         rooms[data.room].playerListe[data.numPlayer].joue = data.perso;
-        console.log(rooms[data.room]);
       } else {
         //vérifie si le fantome a déjà été choisi
         if ( plays['fantom'] != undefined ) {
@@ -490,7 +488,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
 
     //vérifie si le tour est fini
     if (playerVision < (rooms[data.room].playerListe.length - 2) ) {
-      console.log('je ne change pas de tour.');
       //enregistre les cartes vision du joueur
       partie.updateOne({room:data.room}, { $set: { listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, tour : rooms[data.room].tour } }, function(err,result){});
       data.endTour = false;
@@ -501,7 +498,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
           rooms[data.room].playerListe[i].vision = null;
         }
       }
-      rooms[data.room].tour++;
       //enregistre les cartes vision du joueur
       partie.updateOne({room:data.room}, { $set: { listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, tour : rooms[data.room].tour } }, function(err,result){});
     }
@@ -723,7 +719,7 @@ var cartesLieux = [
 var cartesObjet = [
   cP('-804px', '-2768px', '113px', '81px', 'objet 01.jpg'),
   cP('-804px', '-2686px', '113px', '81px', 'objet 02.jpg'),
-  cP('-804px', '2604px', '113px', '81px', 'objet 03.jpg'),
+  cP('-804px', '-2604px', '113px', '81px', 'objet 03.jpg'),
   cP('-689px', '-2768px', '113px', '81px', 'objet 04.jpg'),
   cP('-689px', '-2686px', '113px', '81px', 'objet 05.jpg'),
   cP('-689px', '-2603px', '113px', '81px', 'objet 06.jpg'),
