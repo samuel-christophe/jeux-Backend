@@ -95,6 +95,66 @@ table {
   top: 121px;
   left: 79px;
 }
+.a2{
+  left: -286px;
+  top: -714px;
+}
+.ah2{
+  width: 99px;
+  height: 132px;
+  top: 121px;
+  left: 79px;
+}
+.a3{
+  left: -287px;
+  top: -550px;
+}
+.ah3{
+  width: 70px;
+  height: 148px;
+  top: 121px;
+  left: 79px;
+}
+.a4{
+  left: -440px;
+  top: -682px;
+}
+.ah4{
+  width: 98px;
+  height: 133px;
+  top: 121px;
+  left: 53px;
+}
+.a5{
+  left: -415px;
+  top: -573px;
+}
+.ah5{
+  width: 130px;
+  height: 102px;
+  top: 121px;
+  left: 20px;
+}
+.a6{
+  left: -397px;
+  top: -494px;
+}
+.ah6{
+  width: 148px;
+  height: 71px;
+  top: 122px;
+  left: 1px;
+}
+.a7{
+  left: -406px;
+  top: -387px;
+}
+.ah7{
+  width: 131px;
+  height: 100px;
+  top: 92px;
+  left: 19px;
+}
 #jeux{
   width: 2328px;
   height: 100%;
@@ -182,38 +242,106 @@ table {
 .pointImage{
   left: 490px;
   height: 40px;
-  width: 42px;
+  width: 44px;
 }
-#carreJoueurUn{
+.nbPoint0{
   transform: rotate(39deg);
 }
-#carreJoueurDeux{
-  transform: rotate(39deg);
+.nbPoint1{
+  transform: rotate(46deg);
+}
+.nbPoint2{
+  transform: rotate(52deg);
+}
+.nbPoint3{
+  transform: rotate(58deg);
+}
+.nbPoint4{
+  transform: rotate(64deg);
+}
+.nbPoint5{
+  transform: rotate(71deg);
+}
+.nbPoint6{
+  transform: rotate(77deg);
+}
+.nbPoint7{
+  transform: rotate(85deg);
+}
+.nbPoint8{
+  transform: rotate(95deg);
+}
+.nbPoint9{
+  transform: rotate(102deg);
+}
+.nbPoint10{
+  transform: rotate(112deg);
+}
+.nbPoint11{
+  transform: rotate(121deg);
+}
+.nbPoint12{
+  transform: rotate(127deg);
+}
+.nbPoint13{
+  transform: rotate(134deg);
 }
 #pointJoueurUn{
   top: 200px;
+  background-image: url('../image/pion/mauve.jpg');
 }
 #pointJoueurDeux{
   top: 160px;
-}
-#carreJoueurTrois{
-  transform: rotate(39deg);
-}
-#carreJoueurQuatre{
-  transform: rotate(39deg);
+  background-image: url('../image/pion/jaune.jpg');
 }
 #pointJoueurTrois{
   top: 120px;
+  background-image: url('../image/pion/bleu.jpg');
 }
 #pointJoueurQuatre{
   top: 80px;
-}
-#carreJoueurCinq{
-  transform: rotate(39deg);
-}
-#carreJoueurSix{
-  transform: rotate(39deg);
+  background-image: url('../image/pion/noir.jpg');
 }
 #pointJoueurCinq{
   top: 40px;
+  background-image: url('../image/pion/rouge.jpg');
+}
+#pointJoueurSix{
+  background-image: url('../image/pion/blanc.jpg');
+}
+.blanc{
+  background: url('../image/plateau.png') no-repeat -732px 0;
+  z-index: 1;
+	width: 112px;
+	height: 118px;
+}
+.rouge{
+  background: url('../image/plateau.png') no-repeat -853px 0;
+  z-index: 1;
+	width: 123px;
+	height: 112px;
+}
+.noir{
+  background: url('../image/plateau.png') no-repeat -731px -126px;
+  z-index: 1;
+	width: 105px;
+	height: 110px;
+}
+.bleu{
+  background: url('../image/plateau.png') no-repeat -872px -126px;
+  z-index: 1;
+	width: 100px;
+	height: 101px;
+}
+.mauve{
+  background: url('../image/plateau.png') no-repeat -732px -246px;
+  z-index: 1;
+	width: 104px;
+	height: 112px;
+}
+.jaune{
+  background: url('../image/plateau.png') no-repeat -861px -242px;
+  z-index: 1;
+	width: 138px;
+	height: 117px;
 }

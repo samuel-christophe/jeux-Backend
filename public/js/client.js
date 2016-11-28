@@ -78,15 +78,10 @@
       numPlayer = data.numPlayer;
       perso = data.joue;
       nbPlayer = data.nbPlayer;
-      tour = data.tour || 1;
 
       //enregistre les joueurs
       if ( data.playerListe ) {
-        for (var i = 1; i <= nbPlayer; i++) {
-          if (data.playerListe[i]) {
-            playerListe[i] = data.playerListe[i].joue;
-          }
-        }
+        playerListe = data.playerListe;
       }
 
       socket.emit('room', room);
@@ -112,6 +107,7 @@
 
       //vérifie si la partie à déjà commencé
       if (data.start) {
+        tour = data.tour;
         corbeau = data.corbeau;
         debutPartie();
       }
@@ -349,8 +345,8 @@
 
       //ajout des class
       heure.classList.add('image', 'heure', 'couper');
-      aiguilleHeure.classList.add('image', 'couper', 'ah1');
-      aiguille.classList.add('image', 'a1');
+      aiguilleHeure.classList.add('image', 'couper', heureTour[tour].div);
+      aiguille.classList.add('image', heureTour[tour].img);
       position.classList.add('position');
       horloge.classList.add('horloge');
 
@@ -436,7 +432,7 @@
         div.classList.remove('avatar');
         //affichage des voyant
         for (var i = 1; i <= nbPlayer; i++) {
-          if (playerListe[i] != 'fantom') {
+          if (playerListe[i].joue != 'fantom') {
             avatarVoyant(div, i, (playerListe[i].joue - 1));
           }
         }
@@ -491,6 +487,15 @@
         positionVoyant.appendChild(objet);
         positionVoyant.appendChild(objet1);
 
+        progression[1] = personnage;
+        progression[2] = personnage1;
+        progression[3] = personnage2;
+        progression[4] = lieux;
+        progression[5] = lieux1;
+        progression[6] = lieux2;
+        progression[7] = objet;
+        progression[8] = objet1;
+
         //parcour la liste des cartes pour les afficher
         for (var numCartes = 0; numCartes < cartes.personnages.length; numCartes++) {
           if (numCartes < 5) {
@@ -522,10 +527,12 @@
           }
           point.appendChild(pointInt);
           //parcour la liste des joueurs pour afficher leur points
-          for (var i = 1; i <= nbPlayer; i++) {
-            if (playerListe[i] != 'fantom') {
-              var carreJoueur = document.createElement('div');
-              var pointJoueur = document.createElement('image');
+          for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
+            if (playerListe[numJoueur].joue != 'fantom') {
+              createPoint(numJoueur, point);
+              playerListe[numJoueur].intuition = document.createElement('div');
+              playerListe[numJoueur].intuition.classList.add(jetonPoint[playerListe[numJoueur].joue].couleur);
+              progression[playerListe[numJoueur].position].appendChild(playerListe[numJoueur].intuition);
             }
           }
         }
@@ -571,7 +578,7 @@
       perso.classList.add('couper', 'carte');
       lieux.classList.add('couper', 'carte');
       objet.classList.add('couper', 'carte');
-      image.classList.add('image', joueur[playerListe[numPlayer] -1]);
+      image.classList.add('image', joueur[playerListe[numPlayer].joue - 1]);
       jeton.classList.add('div', 'jetonFantome', 'couper');
       voyant.classList.add('div', 'voyant');
 
@@ -712,7 +719,7 @@
 
       //ajout d'id
       jeton.id = numPlayer;
-      image.id = joueurVoyant[playerListe[numPlayer] -1];
+      image.id = joueurVoyant[playerListe[numPlayer].joue -1];
 
       //ajout dans le document
       jeton.appendChild(image);
@@ -767,6 +774,20 @@
       xMousePosition = e.clientX + window.pageXOffset;
       yMousePosition = e.clientY + window.pageYOffset;
     });
+
+    //affiche les point des joueurs
+    function createPoint (numJoueur, point) {
+      var carreJoueur = document.createElement('div');
+      var pointJoueur = document.createElement('div');
+      carreJoueur.classList.add('image', 'pointCouleurDiv');
+      pointJoueur.classList.add('image', 'pointImage');
+      carreJoueur.classList.add('nbPoint' + playerListe[numJoueur].nbPoint);
+      pointJoueur.id = 'pointJoueur' + jetonPoint[playerListe[numJoueur].joue].numPlayer;
+      carreJoueur.appendChild(pointJoueur);
+      point.appendChild(carreJoueur);
+
+      playerListe[numJoueur].carre = carreJoueur;
+    };
 
 
     function OK()
@@ -930,8 +951,11 @@
 
   var joueur = ['joueurQuatre', 'joueurTrois', 'joueurDeux', 'joueurSix', 'joueurCinq', 'joueurUn'];
   var joueurVoyant = ['joueurNoir', 'joueurBleu', 'joueurJaune', 'joueurBlanc', 'joueurRouge', 'joueurMauve'];
+  var heureTour = [,{div: 'ah1', img: 'a1'},{div: 'ah2', img: 'a2'},{div: 'ah3', img: 'a3'},{div: 'ah4', img: 'a4'},{div: 'ah5', img: 'a5'},{div: 'ah6', img: 'a6'},{div: 'ah7', img: 'a7'}];
+  var jetonPoint = [,{couleur : 'noir', numPlayer : 'Quatre'}, {couleur : 'bleu', numPlayer : 'Trois'}, {couleur : 'jaune', numPlayer : 'Deux'}, {couleur : 'blanc', numPlayer : 'Six'}, {couleur : 'rouge', numPlayer : 'Cinq'}, {couleur : 'mauve', numPlayer : 'Un'}];
   var choisCarte = {vision:[],listesJoueur:[]};
   var corbeau;
   var corbeauUse = true;
+  var progression = [];
 
 })(window, io);

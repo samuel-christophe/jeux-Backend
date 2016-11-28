@@ -107,7 +107,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
           //partie commencé
           if (result.start) {
             start = true;
-            tour = result.tour;
+            tour = rooms[room].tour;
           }
           // ajout dans la room
           socket.join(room);
@@ -223,12 +223,12 @@ socketIOWebSocketServer.on('connection', (socket) => {
           numPlayer: numPlayer,
           joue: joue,
           start: start,
-          playerListe: result.playerListe,
+          playerListe: rooms[room].playerListe,
           nbPlayer: result.nbPlayer,
           cartes: cartes,
           visionPlayer : visionPlayer,
-          tour : tour || null,
-          corbeau : corbeau || null
+          tour : tour,
+          corbeau : corbeau
         });
         // Let the existing players in room know there is a new player
         // TODO -- Add room number to this / Player class
