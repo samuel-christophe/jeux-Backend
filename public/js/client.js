@@ -298,6 +298,14 @@
       }
     });
 
+    //affiche la position du joueur
+    socket.on('positionVoyant', (data) => {
+      //le fantome ne vois pas le chois du joueur
+      if (perso != 'fantom' && numPlayer != data.numPlayer) {
+        document.getElementById(progressionVoyant[playerListe[data.numPlayer].position] + data.numCartes).insertBefore(playerListe[data.numPlayer].intuition, document.getElementById(progressionVoyant[playerListe[data.numPlayer].position] + data.numCartes).children[0]);
+      }
+    });
+
     //fonction ajouter message
     var addChat = (mes) => {
       // create a new div element
@@ -455,18 +463,18 @@
         positionVoyant.classList.add('position');
         personnage.classList.add('div', 'positionJoueur', 'couper');
         personnageDiv.classList.add('image', 'centre');
-        personnageImage.classList.add('image', 'perso');
-        personnage1.classList.add('div');
-        personnage2.classList.add('div');
+        personnageImage.classList.add('image');
+        personnage1.classList.add('div', 'index');
+        personnage2.classList.add('div', 'index');
         lieux.classList.add('div', 'positionJoueur', 'couper');
         lieuxDiv.classList.add('image', 'centre');
         lieuxImage.classList.add('image', 'lieu');
-        lieux1.classList.add('div');
-        lieux2.classList.add('div');
+        lieux1.classList.add('div', 'index');
+        lieux2.classList.add('div', 'index');
         objet.classList.add('div', 'positionJoueur', 'couper');
         objetDiv.classList.add('image', 'centre');
         objetImage.classList.add('image', 'objet');
-        objet1.classList.add('div');
+        objet1.classList.add('div', 'index');
 
         personnageImage.src = 'image/plateau.png';
         lieuxImage.src = 'image/plateau.png';
@@ -488,12 +496,12 @@
         positionVoyant.appendChild(objet1);
 
         progression[1] = personnage;
-        progression[2] = personnage1;
-        progression[3] = personnage2;
-        progression[4] = lieux;
-        progression[5] = lieux1;
-        progression[6] = lieux2;
-        progression[7] = objet;
+        progression[2] = lieux;
+        progression[3] = objet;
+        progression[4] = personnage1;
+        progression[5] = personnage2;
+        progression[6] = lieux1;
+        progression[7] = lieux2;
         progression[8] = objet1;
 
         //parcour la liste des cartes pour les afficher
@@ -510,9 +518,9 @@
           var pointInt = document.createElement('div');
           var point6 = document.createElement('img');
 
-          point.classList.add('div', 'point');
-          pointInt.classList.add('image', 'pointInt');
-          point6.classList.add('image', 'point6');
+          point.classList.add('div', 'point', 'index2');
+          pointInt.classList.add('image', 'pointInt', 'index2');
+          point6.classList.add('image', 'point6', 'index2');
 
           point6.src = 'image/plateau.png';
 
@@ -521,18 +529,21 @@
           //ajout du plateau de point à plus de 6 joueur
           if (nbPlayer < 6) {
             var point4 = document.createElement('img');
-            point4.classList.add('image', 'point4');
+            point4.classList.add('image', 'point4', 'index2');
             point4.src = 'image/plateau.png';
             pointInt.appendChild(point4);
           }
           point.appendChild(pointInt);
-          //parcour la liste des joueurs pour afficher leur points
+          var numVoyant = 0;
+          //parcour la liste des joueurs pour afficher leur points et place les pions intuition
           for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
             if (playerListe[numJoueur].joue != 'fantom') {
               createPoint(numJoueur, point);
               playerListe[numJoueur].intuition = document.createElement('div');
               playerListe[numJoueur].intuition.classList.add(jetonPoint[playerListe[numJoueur].joue].couleur);
-              progression[playerListe[numJoueur].position].appendChild(playerListe[numJoueur].intuition);
+              progression[playerListe[numJoueur].position].insertBefore(playerListe[numJoueur].intuition, progression[playerListe[numJoueur].position].children[numVoyant]);
+              numVoyant++;
+              contextmenu(playerListe[numJoueur].intuition, [0, 1]);
             }
           }
         }
@@ -648,15 +659,15 @@
       objetGrand.src = 'image/carte objet/' + cartes.cartesObjet[numCartes].src;
 
       //ajout des class
-      persoPetit.classList.add('image');
-      lieuxPetit.classList.add('image');
-      objetPetit.classList.add('image');
+      persoPetit.classList.add('image', 'index');
+      lieuxPetit.classList.add('image', 'index');
+      objetPetit.classList.add('image', 'index');
       persoGrand.classList.add('image', 'start', 'grandeCarte');
       lieuxGrand.classList.add('image', 'start', 'grandeCarte');
       objetGrand.classList.add('image', 'start', 'grandeCarte');
-      perso.classList.add('couper', 'carte');
-      lieux.classList.add('couper', 'carte');
-      objet.classList.add('couper', 'carte');
+      perso.classList.add('couper', 'carte', 'index');
+      lieux.classList.add('couper', 'carte', 'index');
+      objet.classList.add('couper', 'carte', 'index');
 
       //positionnement
       persoPetit.style.left = cartes.personnages[numCartes].left;
@@ -675,6 +686,9 @@
       objet.style.height = cartes.cartesObjet[numCartes].height;
 
       //ajout d'id
+      persoPetit.id = 'persoPetit' + numCartes;
+      lieuxPetit.id = 'lieuxPetit' + numCartes;
+      objetPetit.id = 'objetPetit' + numCartes;
       perso.id = 'perso' + numCartes;
       lieux.id = 'lieux' + numCartes;
       objet.id = 'objet' + numCartes;
@@ -697,9 +711,9 @@
       afficheImage(lieuxGrand, lieuxGrand);
       afficheImage(objetPetit, objetGrand);
       afficheImage(objetGrand, objetGrand);
-      contextmenu(persoPetit, [7]);
-      contextmenu(objetPetit, [7]);
-      contextmenu(lieuxPetit, [7]);
+      contextmenu(persoPetit, [7], 1, numCartes);
+      contextmenu(lieuxPetit, [7], 2, numCartes);
+      contextmenu(objetPetit, [7], 3, numCartes);
 
     };
     //position des voyant
@@ -779,7 +793,7 @@
     function createPoint (numJoueur, point) {
       var carreJoueur = document.createElement('div');
       var pointJoueur = document.createElement('div');
-      carreJoueur.classList.add('image', 'pointCouleurDiv');
+      carreJoueur.classList.add('image', 'pointCouleurDiv', 'index2');
       pointJoueur.classList.add('image', 'pointImage');
       carreJoueur.classList.add('nbPoint' + playerListe[numJoueur].nbPoint);
       pointJoueur.id = 'pointJoueur' + jetonPoint[playerListe[numJoueur].joue].numPlayer;
@@ -857,9 +871,15 @@
     };
 
     //positionner le jeton voyant
-    function voirCarte()
+    function intuitionPosition(id, num, numCartes)
     {
-      //code
+      if(playerListe[numPlayer].position == num) {
+        playerListe[numPlayer].intuitionPosition = numCartes;
+        document.getElementById(id).parentNode.insertBefore(playerListe[numPlayer].intuition, document.getElementById(id).parentNode.children[0]);
+        socket.emit('position', {numPlayer: numPlayer, numCartes: numCartes, room: room});
+      } else {
+        addChat('Vous ne pouvez choisir cet position');
+      }
     };
 
     //affiche les images grande ou les cache
@@ -871,7 +891,7 @@
     };
 
     //ajoute un menu contextuel
-    var contextmenu = function (element, arrayRightClic) {
+    var contextmenu = function (element, arrayRightClic, num, numCartes) {
       element.addEventListener('contextmenu', (event) => {rightClic(event)});
       function rightClic (event){
         event.preventDefault();
@@ -932,16 +952,16 @@
             p.addEventListener('click', function () { voirCarte(element); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'Voir vos cartes vision';
-          },function(element){
+          },function(element, num){
             var p = document.createElement('p');
             d.appendChild(p);
-            p.addEventListener('click', function () { position(element); });
+            p.addEventListener('click', function () { intuitionPosition(element, num, numCartes); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'Positionner votre jeton ici.';
           }];
 
         for (var i = 0; i < arrayRightClic.length; i++) {
-          menu[arrayRightClic[i]](element.id);
+          menu[arrayRightClic[i]](element.id, num, numCartes);
         }
         return false;
       }
@@ -957,5 +977,6 @@
   var corbeau;
   var corbeauUse = true;
   var progression = [];
+  var progressionVoyant = [,'perso', 'lieux', 'objet'];
 
 })(window, io);
