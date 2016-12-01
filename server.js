@@ -85,7 +85,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       numPartie = count;
     });
 
-    var room, numPlayer, joue, start, visionPlayer, tour, corbeau;
+    var room, numPlayer, joue, start, tour, corbeau;
     //vérifie si l'utilisateur existe
     users.findOne({username : data.username}, function (err, result) {
 
@@ -194,51 +194,52 @@ socketIOWebSocketServer.on('connection', (socket) => {
         }
       }
       var cartes;
-      partie.findOne({room:room},function(err,result){
-        //vérifie que la partie à comencé pour envoyer les cartes
-        if (result.start) {
-          if (joue == 'fantom') {
-            //envoie les cartes du fantome
-            cartes = {
-              personnages: recupCartes(cartesPersonnages, result.listesCartes.cartesPersonnages.tabFantom),
-              cartesLieux: recupCartes(cartesLieux, result.listesCartes.cartesLieux.tabFantom),
-              cartesObjet: recupCartes(cartesObjet, result.listesCartes.cartesObjet.tabFantom),
-              vision: recupCartes(carteVisions, result.listesCartes.cardVision)
-            };
-          } else {
-            cartes = {
-              personnages: recupCartes(cartesPersonnages, result.listesCartes.cartesPersonnages.tabVoyant),
-              cartesLieux: recupCartes(cartesLieux, result.listesCartes.cartesLieux.tabVoyant),
-              cartesObjet: recupCartes(cartesObjet, result.listesCartes.cartesObjet.tabVoyant)
-            };
-            if (result.playerListe[numPlayer].vision) {
-              visionPlayer = recupCartes(carteVisions, result.playerListe[numPlayer].vision);
+      var playerListe = rooms[room].playerListe;
+      //vérifie que la partie à comencé pour envoyer les cartes
+      if (rooms[room].start) {
+        if (joue == 'fantom') {
+          //envoie les cartes du fantome
+          cartes = {
+            personnages: recupCartes(cartesPersonnages, rooms[room].listesCartes.cartesPersonnages.tabFantom),
+            cartesLieux: recupCartes(cartesLieux, rooms[room].listesCartes.cartesLieux.tabFantom),
+            cartesObjet: recupCartes(cartesObjet, rooms[room].listesCartes.cartesObjet.tabFantom),
+            vision: recupCartes(carteVisions, rooms[room].listesCartes.cardVision)
+          };
+        } else {
+          cartes = {
+            personnages: recupCartes(cartesPersonnages, rooms[room].listesCartes.cartesPersonnages.tabVoyant),
+            cartesLieux: recupCartes(cartesLieux, rooms[room].listesCartes.cartesLieux.tabVoyant),
+            cartesObjet: recupCartes(cartesObjet, rooms[room].listesCartes.cartesObjet.tabVoyant)
+          };
+          //parcour la liste des joueurs pour envoyer les cartes vision
+          for (var i = 1; i < playerListe.length; i++) {
+            if (playerListe[i].vision != undefined) {
+              playerListe[i].vision = recupCartes(carteVisions, rooms[room].playerListe[i].vision);
             }
           }
         }
-        //crée une room par player
-        socket.join(data.username);
-        //envoie du message au player
-        socketIOWebSocketServer.in(data.username).emit('joincreateconfirm', {
-          room: room,
-          numPlayer: numPlayer,
-          joue: joue,
-          start: start,
-          playerListe: rooms[room].playerListe,
-          nbPlayer: result.nbPlayer,
-          cartes: cartes,
-          visionPlayer : visionPlayer,
-          tour : tour,
-          corbeau : corbeau
-        });
-        // Let the existing players in room know there is a new player
-        // TODO -- Add room number to this / Player class
-        if (!rooms[room].start) {
-          socketIOWebSocketServer.in(room).emit('new player', {
-            name:data.username
-          });
-        }
+      }
+      //crée une room par player
+      socket.join(data.username);
+      //envoie du message au player
+      socketIOWebSocketServer.in(data.username).emit('joincreateconfirm', {
+        room: room,
+        numPlayer: numPlayer,
+        joue: joue,
+        start: start,
+        playerListe: rooms[room].playerListe,
+        nbPlayer: result.nbPlayer,
+        cartes: cartes,
+        tour : tour,
+        corbeau : corbeau
       });
+      // Let the existing players in room know there is a new player
+      // TODO -- Add room number to this / Player class
+      if (!rooms[room].start) {
+        socketIOWebSocketServer.in(room).emit('new player', {
+          name:data.username
+        });
+      }
 
     });
   });
@@ -282,9 +283,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       });
       //mise à jour du nombre de joueur
       for (var i = 1; i <= (rooms[data.room].nbPlayer + 1); i++) {
-        console.log(i);
         if (i != data.numPlayer) {
-          console.log(rooms[data.room].playerListe[i]);
           users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {nbPlayer: rooms[data.room].nbPlayer} }, function(err, result) {
             if (err) {
               console.log(err);
@@ -369,12 +368,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
           rooms[data.room].vision = cartes.vision(vision);
           rooms[data.room].listesCartes.cardVision = rooms[data.room].vision.slice(0,7);
           rooms[data.room].vision = rooms[data.room].vision.slice(7);
-          //enregistre les paramètre de la partie
-          partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, tour: 1, corbeau : data.corbeau}}, function(err, result) {
-            if (err) {
-              console.log(err);
-            }
-          });
           //enregistre que la partie à commencé pour tous les joueurs
           for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
             users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true, corbeau: data.corbeau, nbPoint: 0, position: 1} }, function(err, result) {
@@ -393,6 +386,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
               console.log('envoie des cartes pour le fantom');
               socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
             } else {
+              rooms[data.room].playerListe[i].position = 1;
               cartes = {
                 personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
                 cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabVoyant),
@@ -402,6 +396,12 @@ socketIOWebSocketServer.on('connection', (socket) => {
               socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
             }
           }
+          //enregistre les paramètre de la partie
+          partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, tour: 1, corbeau : data.corbeau}}, function(err, result) {
+            if (err) {
+              console.log(err);
+            }
+          });
         }
       }
     }
@@ -512,11 +512,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
       data.endTour = false;
     } else {
       data.endTour = true;
-      for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-        if (rooms[data.room].playerListe[i].vision) {
-          rooms[data.room].playerListe[i].vision = null;
-        }
-      }
       //enregistre les cartes vision du joueur
       partie.updateOne({room:data.room}, { $set: { listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, tour : rooms[data.room].tour } }, function(err,result){});
     }
@@ -551,12 +546,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
         rooms[data.room].listesCartes.cardVision = rooms[data.room].vision.slice(0,7);
         rooms[data.room].vision = rooms[data.room].vision.slice(7);
 
-        //enregistre les paramètre de la partie dans la base de donné
-        partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, tour: 1, corbeau : data.corbeau}}, function(err, result) {
-          if (err) {
-            console.log(err);
-          }
-        });
         //enregistre que la partie à commencé pour tous les joueurs
         for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
           users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true, corbeau: data.corbeau, nbPoint: 0, position: 1} }, function(err, result) {
@@ -574,6 +563,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
             };
             socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
           } else {
+            rooms[data.room].playerListe[i].position = 1;
             cartes = {
               personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
               cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabVoyant),
@@ -582,12 +572,18 @@ socketIOWebSocketServer.on('connection', (socket) => {
             socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
           }
         }
+        //enregistre les paramètre de la partie dans la base de donné
+        partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, tour: 1, corbeau : data.corbeau}}, function(err, result) {
+          if (err) {
+            console.log(err);
+          }
+        });
       }
     }
 
     // Connection collection
     var partie = db.get().collection('partie');
-    //met à kour la difficulté
+    //met à jour la difficulté
     partie.updateOne({room : data.room}, { $set: {level : data.level}}, function(err, result) {
       if (err) {
         console.log(err);
@@ -793,6 +789,21 @@ var carteVisions = [
   cP('-1240px', '-470px', '150px', '228px', 'carte 33.jpg'),
   cP('-1395px', '-470px', '150px', '228px', 'carte 34.jpg'),
   cP('-1550px', '-470px', '150px', '228px', 'carte 35.jpg'),
+  cP('1704px', '-470px', '149px', '228px', 'carte 36.jpg'),
+  cP(0, '-705px', '149px', '228px', 'carte 37.jpg'),
+  cP('-154px', '-705px', '149px', '228px', 'carte 38.jpg'),
+  cP('-309px', '-705px', '149px', '228px', 'carte 39.jpg'),
+  cP('-464px', '-705px', '149px', '228px', 'carte 40.jpg'),
+  cP('-620px', '-705px', '149px', '228px', 'carte 41.jpg'),
+  cP('-774px', '705px', '149px', '228px', 'carte 42.jpg'),
+  cP('-929px', '-705px', '149px', '228px', 'carte 43.jpg'),
+  cP('-1084px', '-706px', '149px', '228px', 'carte 44.jpg'),
+  cP('-1239px', '-705px', '149px', '228px', 'carte 45.jpg'),
+  cP('-1394px', '-705px', '149px', '228px', 'carte 46.jpg'),
+  cP('-1549px', '705px', '149px', '228px', 'carte 47.jpg'),
+  cP('-1704px', '-705px', '149px', '228px', 'carte 48.jpg'),
+  cP(0, '-940px', '149px', '228px', 'carte 49.jpg'),
+  cP('-154px', '-940px', '149px', '228px', 'carte 50.jpg'),
   cP(0, 0, '150px', '228px', 'carte 01.jpg'),
   cP('-155px', 0, '150px', '229px', 'carte 02.jpg'),
   cP('-310px', 0, '150px', '228px', 'carte 03.jpg'),
@@ -828,6 +839,21 @@ var carteVisions = [
   cP('-1240px', '-470px', '150px', '228px', 'carte 33.jpg'),
   cP('-1395px', '-470px', '150px', '228px', 'carte 34.jpg'),
   cP('-1550px', '-470px', '150px', '228px', 'carte 35.jpg'),
+  cP('1704px', '-470px', '149px', '228px', 'carte 36.jpg'),
+  cP(0, '-705px', '149px', '228px', 'carte 37.jpg'),
+  cP('-154px', '-705px', '149px', '228px', 'carte 38.jpg'),
+  cP('-309px', '-705px', '149px', '228px', 'carte 39.jpg'),
+  cP('-464px', '-705px', '149px', '228px', 'carte 40.jpg'),
+  cP('-620px', '-705px', '149px', '228px', 'carte 41.jpg'),
+  cP('-774px', '705px', '149px', '228px', 'carte 42.jpg'),
+  cP('-929px', '-705px', '149px', '228px', 'carte 43.jpg'),
+  cP('-1084px', '-706px', '149px', '228px', 'carte 44.jpg'),
+  cP('-1239px', '-705px', '149px', '228px', 'carte 45.jpg'),
+  cP('-1394px', '-705px', '149px', '228px', 'carte 46.jpg'),
+  cP('-1549px', '705px', '149px', '228px', 'carte 47.jpg'),
+  cP('-1704px', '-705px', '149px', '228px', 'carte 48.jpg'),
+  cP(0, '-940px', '149px', '228px', 'carte 49.jpg'),
+  cP('-154px', '-940px', '149px', '228px', 'carte 50.jpg'),
   cP(0, 0, '150px', '228px', 'carte 01.jpg'),
   cP('-155px', 0, '150px', '229px', 'carte 02.jpg'),
   cP('-310px', 0, '150px', '228px', 'carte 03.jpg'),
@@ -852,39 +878,9 @@ var carteVisions = [
   cP('-1395px', '-235px', '150px', '228px', 'carte 22.jpg'),
   cP('-1550px', '-235px', '150px', '228px', 'carte 23.jpg'),
   cP('-1705px', '-235px', '147px', '228px', 'carte 24.jpg'),
-  cP(0, '-470px', '150px', '228px', 'carte 25.jpg'),
-  cP('-155px', '-470px', '150px', '228px', 'carte 26.jpg'),
-  cP('-310px', '-470px', '150px', '228px', 'carte 27.jpg'),
-  cP('-465px', '-470px', '150px', '228px', 'carte 28.jpg'),
-  cP('-620px', '-470px', '150px', '228px', 'carte 29.jpg'),
-  cP('-775px', '-470px', '150px', '228px', 'carte 30.jpg'),
   cP('-930px', '-470px', '150px', '228px', 'carte 31.jpg'),
   cP('-1085px', '-470px', '150px', '228px', 'carte 32.jpg'),
   cP('-1240px', '-470px', '150px', '228px', 'carte 33.jpg'),
   cP('-1395px', '-470px', '150px', '228px', 'carte 34.jpg'),
-  cP('-1550px', '-470px', '150px', '228px', 'carte 35.jpg'),
-  cP(0, 0, '150px', '228px', 'carte 01.jpg'),
-  cP('-155px', 0, '150px', '229px', 'carte 02.jpg'),
-  cP('-310px', 0, '150px', '228px', 'carte 03.jpg'),
-  cP('-465px', 0, '150px', '228px', 'carte 04.jpg'),
-  cP('-620px', 0, '150px', '228px', 'carte 05.jpg'),
-  cP('-775px', 0, '149px', '228px', 'carte 06.jpg'),
-  cP('-929px', 0, '150px', '228px', 'carte 07.jpg'),
-  cP('-1084px', 0, '150px', '227px', 'carte 08.jpg'),
-  cP('-1239px', 0, '150px', '227px', 'carte 09.jpg'),
-  cP('-1394px', 0, '149px', '227px', 'carte 10.jpg'),
-  cP('-1548px', 0, '149px', '227px', 'carte 11.jpg'),
-  cP('-1702px', 0, '150px', '227px', 'carte 12.jpg'),
-  cP(0, '-235px', '150px', '228px', 'carte 13.jpg'),
-  cP('-155px', '-235px', '150px', '228px', 'carte 14.jpg'),
-  cP('-310px', '-235px', '150px', '228px', 'carte 15.jpg'),
-  cP('-465px', '-235px', '150px', '228px', 'carte 16.jpg'),
-  cP('-620px', '-235px', '150px', '228px', 'carte 17.jpg'),
-  cP('-775px', '-235px', '150px', '228px', 'carte 18.jpg'),
-  cP('-930px', '-235px', '150px', '228px', 'carte 19.jpg'),
-  cP('-1085px', '-235px', '150px', '228px', 'carte 20.jpg'),
-  cP('-1240px', '-235px', '150px', '228px', 'carte 21.jpg'),
-  cP('-1395px', '-235px', '150px', '228px', 'carte 22.jpg'),
-  cP('-1550px', '-235px', '150px', '228px', 'carte 23.jpg'),
-  cP('-1705px', '-235px', '147px', '228px', 'carte 24.jpg')
+  cP('-1550px', '-470px', '150px', '228px', 'carte 35.jpg')
 ];

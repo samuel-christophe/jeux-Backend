@@ -73,10 +73,8 @@
       A chaque message reçu, on affiche les données
       obtenues dans la console du navigateur Internet.
       **/
-      cartes = data.cartes;
       room = data.room;
       numPlayer = data.numPlayer;
-      perso = data.joue;
       nbPlayer = data.nbPlayer;
 
       //enregistre les joueurs
@@ -107,8 +105,10 @@
 
       //vérifie si la partie à déjà commencé
       if (data.start) {
+        cartes = data.cartes;
         tour = data.tour;
         corbeau = data.corbeau;
+        perso = data.joue;
         debutPartie();
       }
 
@@ -117,6 +117,7 @@
     //envoie de donné privé du serveur
     socket.on('cartes', (data) => {
       cartes = data;
+      console.log(cartes);
     });
 
     socket.on('new player', (data) => {
@@ -245,6 +246,7 @@
         }
         //début de la partie
         if (data.start){
+          tour = data.tour;
           corbeau = data.corbeau;
           debutPartie ();
         }
@@ -282,6 +284,37 @@
           addChat('tous les personnage on eux leur cartes');
         }
       } else {
+        playerListe[data.perso].vision = data.vision
+        for (var numeroCarte = 0; numeroCarte < playerListe[data.perso].vision.length; numeroCarte++) {
+          //créeation des éléments et ajout des cartes
+          var visionPetit = document.createElement('img');
+          var visionGrand = document.createElement('img');
+          var carte = document.createElement('div');
+
+          //ajout des src
+          visionPetit.src = 'image/spriteVisions.png';
+          visionGrand.src = 'image/carte vision/' + playerListe[numPlayer].vision[numeroCarte].src;
+
+          //ajout des class
+          visionPetit.classList.add('image', 'index2');
+          visionGrand.classList.add('image', 'start', 'grandeCarte');
+          carte.classList.add('div', 'couper', 'carte', 'index2');
+
+          //positionnement
+          visionPetit.style.left = playerListe[numPlayer].vision[numeroCarte].left;
+          visionPetit.style.top = playerListe[numPlayer].vision[numeroCarte].top;
+          carte.style.width = playerListe[numPlayer].vision[numeroCarte].width;
+          carte.style.height = playerListe[numPlayer].vision[numeroCarte].height;
+
+          //ajout dans le document
+          carte.appendChild(visionPetit);
+          document.getElementById(data.perso).parentNode.appendChild(carte);
+          jeux.appendChild(visionGrand);
+
+          //ajout des événements
+          afficheImage(visionPetit, visionGrand);
+          afficheImage(visionGrand, visionGrand);
+        }
       }
     });
 
@@ -290,9 +323,9 @@
       if (username != data.username) {
         addChat(data.username + ' a selectionné la difficultée : ' + niveau[data.level - 1]);
       }
-      cartes = data.cartes;
       //début de la partie
       if (data.start){
+        tour = data.tour;
         corbeau = data.corbeau;
         debutPartie ();
       }
@@ -498,13 +531,14 @@
         progression[1] = personnage;
         progression[2] = lieux;
         progression[3] = objet;
-        progression[4] = personnage1;
-        progression[5] = personnage2;
-        progression[6] = lieux1;
-        progression[7] = lieux2;
-        progression[8] = objet1;
+        // progression[4] = personnage1;
+        // progression[5] = personnage2;
+        // progression[6] = lieux1;
+        // progression[7] = lieux2;
+        // progression[8] = objet1;
 
         //parcour la liste des cartes pour les afficher
+        console.log(cartes);
         for (var numCartes = 0; numCartes < cartes.personnages.length; numCartes++) {
           if (numCartes < 5) {
             carteVoyant(numCartes, personnage1, lieux1, objet1);
@@ -521,9 +555,7 @@
           point.classList.add('div', 'point', 'index2');
           pointInt.classList.add('image', 'pointInt', 'index2');
           point6.classList.add('image', 'point6', 'index2');
-
           point6.src = 'image/plateau.png';
-
           pointInt.appendChild(point6);
 
           //ajout du plateau de point à plus de 6 joueur
@@ -574,6 +606,7 @@
       persoPetit.src = 'image/sprite carte.png';
       lieuxPetit.src = 'image/sprite carte.png';
       objetPetit.src = 'image/sprite carte.png';
+      console.log(cartes);
       persoGrand.src = 'image/carte personnage/' + cartes.personnages[numCartes].src;
       lieuxGrand.src = 'image/cartes lieu/' + cartes.cartesLieux[numCartes].src;
       objetGrand.src = 'image/carte objet/' + cartes.cartesObjet[numCartes].src;
@@ -727,13 +760,49 @@
       image.src = 'image/plateau.png';
 
       //ajout des class
-      image.classList.add('image');
-      jeton.classList.add('div', 'etuit', 'couper');
-      voyant.classList.add('div', 'voyant');
+      image.classList.add('image', 'index2');
+      jeton.classList.add('image', 'etuit', 'couper', 'index2');
+      voyant.classList.add('div', 'voyant', 'index2');
 
       //ajout d'id
       jeton.id = numPlayer;
       image.id = joueurVoyant[playerListe[numPlayer].joue -1];
+
+      //ajoute les carte vision
+      if (playerListe[numPlayer].vision) {
+        for (var numeroCarte = 0; numeroCarte < playerListe[numPlayer].vision.length; numeroCarte++) {
+          //créeation des éléments et ajout des cartes
+          var visionPetit = document.createElement('img');
+          var visionGrand = document.createElement('img');
+          var carte = document.createElement('div');
+
+          //ajout des src
+          visionPetit.src = 'image/spriteVisions.png';
+          console.log(playerListe[numPlayer].vision);
+          console.log(numeroCarte);
+          visionGrand.src = 'image/carte vision/' + playerListe[numPlayer].vision[numeroCarte].src;
+
+          //ajout des class
+          visionPetit.classList.add('image', 'index2');
+          visionGrand.classList.add('image', 'start', 'grandeCarte');
+          carte.classList.add('div', 'couper', 'carte', 'index2');
+
+          //positionnement
+          visionPetit.style.left = playerListe[numPlayer].vision[numeroCarte].left;
+          visionPetit.style.top = playerListe[numPlayer].vision[numeroCarte].top;
+          carte.style.width = playerListe[numPlayer].vision[numeroCarte].width;
+          carte.style.height = playerListe[numPlayer].vision[numeroCarte].height;
+
+          //ajout dans le document
+          carte.appendChild(visionPetit);
+          voyant.appendChild(carte);
+          jeux.appendChild(visionGrand);
+
+          //ajout des événements
+          afficheImage(visionPetit, visionGrand);
+          afficheImage(visionGrand, visionGrand);
+        }
+      }
 
       //ajout dans le document
       jeton.appendChild(image);
@@ -742,7 +811,6 @@
 
       //ajout des événements
       contextmenu(jeton, [6]);
-
     };
 
     //affichage des cartes des joueur pour le fantom fantom
