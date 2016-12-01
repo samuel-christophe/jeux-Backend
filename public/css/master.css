@@ -52,11 +52,17 @@ table {
   height: 624px;
   top: 180px;
 }
-.index{
+.index1{
   z-index: -1;
 }
 .index2{
   z-index: -2;
+}
+.zindex2{
+  z-index: 2;
+}
+.zindex1{
+  z-index: 1;
 }
 .image{
   position: absolute;
@@ -204,8 +210,12 @@ table {
   width: 100%;
   height: 717px;
 }
+.avatarVoyant{
+  width: 100%;
+  height: 234px;
+}
 .voyant{
-	width: 385px;
+	width: 285px;
 	height: 152px;
 }
 .etuit{
@@ -348,4 +358,135 @@ table {
   z-index: 1;
 	width: 112px;
 	height: 101px;
+}
+.okblanc{
+  background: url('../image/pion/pion blanc ok.png') no-repeat 0 0;
+  margin-top: 54px;
+	width: 110px;
+	height: 154px;
+  position: relative;
+
+}
+.okrouge{
+  background: url('../image/pion/pion rouge ok.png') no-repeat 0 0;
+  bottom: -115px;
+	width: 110px;
+	height: 154px;
+  position: relative;
+
+}
+.oknoir{
+  background: url('../image/pion/pion noir ok.png') no-repeat 0 0;
+  bottom: -115px;
+	width: 110px;
+	height: 154px;
+  position: relative;
+  float: left;
+}
+.okbleu{
+  background: url('../image/pion/pion bleu ok.png') no-repeat 0 0;
+  bottom: -115px;
+	width: 110px;
+	height: 154px;
+  position: relative;
+
+}
+.okmauve{
+  background: url('../image/pion/pion mauve ok.png') no-repeat 0 0;
+  bottom: 0;
+	width: 110px;
+	height: 154px;
+  position: relative;
+
+}
+.okjaune{
+  background: url('../image/pion/pion jaune ok.png') no-repeat 0 0;
+  bottom: -115px;
+	width: 110px;
+	height: 154px;
+  position: relative;
+
+}
+.nokblanc{
+  background: url('../image/pion/pion blanc nok.png') no-repeat 0 0;
+  bottom: 0;
+	width: 110px;
+	height: 154px;
+  position: relative;
+
+}
+.nokrouge{
+  background: url('../image/pion/pion rouge nok.png') no-repeat 0 0;
+  bottom: -115px;
+	width: 110px;
+	height: 154px;
+  position: relative;
+  float: left;
+}
+.noknoir{
+  background: url('../image/pion/pion noir nok.png') no-repeat 0 0;
+  bottom: -115px;
+	width: 110px;
+	height: 154px;
+  position: relative;
+
+}
+.nokbleu{
+  background: url('../image/pion/pion bleu nok.png') no-repeat 0 0;
+  bottom: -115px;
+	width: 110px;
+	height: 154px;
+  position: relative;
+
+}
+.nokmauve{
+  background: url('../image/pion/pion mauve nok.png') no-repeat 0 0;
+  bottom: -115px;
+	width: 110px;
+	height: 154px;
+  position: relative;
+
+}
+.nokjaune{
+  background: url('../image/pion/pion jaune nok.png') no-repeat 0 0;
+  bottom: -115px;
+	width: 110px;
+	height: 154px;
+  position: relative;
+
+}
+.intuitionblanc{
+  height: 154px;
+  position: relative;
+  top: -38px;
+}
+.intuitionrouge{
+  transform: rotate(60deg);
+  height: 154px;
+  position: relative;
+  top: -38px;
+}
+.intuitionnoir{
+  transform: rotate(120deg);
+  height: 154px;
+  position: relative;
+  top: -38px;
+}
+.intuitionbleu{
+  transform: rotate(180deg);
+  height: 154px;
+  position: relative;
+  top: -38px;
+}
+.intuitionmauve{
+  transform: rotate(-120deg);
+  height: 154px;
+  position: relative;
+  top: -38px;
+}
+.intuitionjaune{
+  transform: rotate(-60deg);
+  height: 154px;
+  position: relative;
+  top: -38px;
 }

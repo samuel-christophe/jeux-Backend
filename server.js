@@ -48,6 +48,8 @@ var vision = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,2
 
 var positionPlateau = [,'cartesPersonnages', 'cartesLieux', 'cartesObjet'];
 
+var jetonClairvoyance = [0,0,0,2,2,3,3];
+
 /**
   Le Serveur WebSocket associé au serveur HTTP.
   URL : ws://[adresse IP/nom de domaine]:8080/
@@ -85,7 +87,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       numPartie = count;
     });
 
-    var room, numPlayer, joue, start, tour, corbeau;
+    var room, numPlayer, joue, start, tour, corbeau, nbPlayer;
     //vérifie si l'utilisateur existe
     users.findOne({username : data.username}, function (err, result) {
 
@@ -101,14 +103,14 @@ socketIOWebSocketServer.on('connection', (socket) => {
           //enregistre le rôle
           if (result.joue) {
             joue = result.joue;
-            if (joue == 'fantom') {
-              corbeau = result.corbeau;
-            }
           }
           //partie commencé
           if (result.start) {
             start = true;
             tour = rooms[room].tour;
+            if (joue == 'fantom') {
+              corbeau = result.corbeau;
+            }
           }
           // ajout dans la room
           socket.join(room);
@@ -118,18 +120,19 @@ socketIOWebSocketServer.on('connection', (socket) => {
       }
 
       //vérifie que le player n'a pas de room
-      if ( !room ) {
+      if ( room == undefined ) {
         //vérifie qu'une room existe
         if ( numPartie == 0 ) {
           //créé une nouvelle room
           room = createRoom();
           numPlayer = 1;
+          nbPlayer = 1;
           rooms[room].playerListe = [];
           rooms[room].playerListe[1] = {};
           rooms[room].playerListe[1].username = data.username;
           socket.join(room);
           //ajoute la room dans la BDD users
-          users.updateOne({username : data.username}, { $set: {partie: {room : room, numPlayer : 1}, nbPlayer: 1}}, function(err, result) {
+          users.updateOne({username : data.username}, { $set: { partie: { room : room, numPlayer : 1 } } }, function(err, result) {
             if (err) {
               console.log(err);
             }
@@ -158,7 +161,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
               rooms[numPartie].playerListe[numPlayer] = {};
               rooms[numPartie].playerListe[numPlayer].username = data.username;
               //ajoute le numéro de la room
-              users.updateOne({username : data.username}, { $set: {partie: {room : numPartie, numPlayer : numPlayer}, nbPlayer : rooms[numPartie].nbPlayer}}, (err, result) => {
+              users.updateOne({username : data.username}, { $set: {partie: {room : numPartie, numPlayer : numPlayer} } }, (err, result) => {
                 if (err) {
                   console.log(err);
                 }
@@ -173,9 +176,10 @@ socketIOWebSocketServer.on('connection', (socket) => {
             }
           }
           //vérifie qu'une room à bien était créé ou ajouté
-          if (!room) {
+          if ( room == undefined ) {
             room = createRoom(this);
             numPlayer = 1;
+            nbPlayer = 1;
             rooms[room].playerListe = [];
             rooms[room].playerListe[1] = {};
             rooms[room].playerListe[1].username = data.username;
@@ -185,7 +189,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
               }
             });
             //ajoute la room dans la BDD
-            partie.updateOne({room : room}, { $set: {playerListe: rooms[room].playerListe } }, (err, result) => {
+            partie.updateOne({room : room}, { $set: { playerListe: rooms[room].playerListe, nbPlayer: nbPlayer } }, (err, result) => {
               if (err) {
                 console.log(err);
               }
@@ -194,7 +198,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
         }
       }
       var cartes;
-      var playerListe = rooms[room].playerListe;
+      var playerListe = JSON.parse(JSON.stringify(rooms[room].playerListe));
       //vérifie que la partie à comencé pour envoyer les cartes
       if (rooms[room].start) {
         if (joue == 'fantom') {
@@ -226,11 +230,11 @@ socketIOWebSocketServer.on('connection', (socket) => {
         room: room,
         numPlayer: numPlayer,
         joue: joue,
-        start: start,
-        playerListe: rooms[room].playerListe,
-        nbPlayer: result.nbPlayer,
+        start: rooms[room].start,
+        playerListe: playerListe,
+        nbPlayer: rooms[room].nbPlayer,
         cartes: cartes,
-        tour : tour,
+        tour : rooms[room].tour,
         corbeau : corbeau
       });
       // Let the existing players in room know there is a new player
@@ -383,17 +387,17 @@ socketIOWebSocketServer.on('connection', (socket) => {
                 cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabFantom),
                 vision: recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision)
               };
-              console.log('envoie des cartes pour le fantom');
-              socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
+              socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes, tour: 1, corbeau: nbCorbeau[data.level], playerListe : rooms[data.room].playerListe});
             } else {
               rooms[data.room].playerListe[i].position = 1;
+              rooms[data.room].playerListe[i].nbJetonOK = jetonClairvoyance[allSelectPlayer];
+              rooms[data.room].playerListe[i].nbJetonNOK = jetonClairvoyance[allSelectPlayer];
               cartes = {
                 personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
                 cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabVoyant),
                 cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabVoyant)
               };
-              console.log('envoie des cartes');
-              socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
+              socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes, tour: 1, corbeau: nbCorbeau[data.level], playerListe : rooms[data.room].playerListe});
             }
           }
           //enregistre les paramètre de la partie
@@ -409,18 +413,27 @@ socketIOWebSocketServer.on('connection', (socket) => {
     // Envoi d'un message au client WebSocket.
     socketIOWebSocketServer.in(data.room).emit('mysterium', data);
     /**
-    On déclare un évènement personnalisé 'unAutreEvenement'
+    On déclare un évènement personnalisé 'mysterium'
     dont la réception sera gérée coté client.
     **/
   });
+
   socket.on('chat', function (data) {
 
     // Envoi d'un message au client WebSocket.
     socketIOWebSocketServer.in(data.room).emit('chatMysterium', data);
     /**
-    On déclare un évènement personnalisé 'unAutreEvenement'
+    On déclare un évènement personnalisé 'chatMysterium'
     dont la réception sera gérée coté client.
     **/
+  });
+
+  //vote des joueur
+  socket.on('vote', function (data) {
+
+    console.log(data);
+    // Envoi d'un message au client WebSocket.
+    socketIOWebSocketServer.in(data.room).emit('voteEnvoye', data);
   });
 
   //affiche la position du joueur
@@ -435,13 +448,9 @@ socketIOWebSocketServer.on('connection', (socket) => {
       var partie = db.get().collection('partie');
       partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe } }, function(err,result){});
     }
-    /**
-    On déclare un évènement personnalisé 'unAutreEvenement'
-    dont la réception sera gérée coté client.
-    **/
   });
 
-  //réintialise les vision
+  //réinitialise les vision
   socket.on('modify card', function (data) {
 
     if ( (rooms[data.room].playerListe[data.numPlayer].joue = 'fantom') && (rooms[data.room].corbeau > 0) ) {
@@ -470,7 +479,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
     var cardSend = [];
     var playerVision = 0;
     var partie = db.get().collection('partie');
-    //enregistre le numéro des cartes envoyé et le nombre de carte envoyé
+    //enregistre le numéro des cartes envoyé
     data.choisCarte.vision.forEach(function (item, index, array) {
       if (item) {
         cardSend.push(rooms[data.room].listesCartes.cardVision[index]);
@@ -539,7 +548,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
       if (allSelectPlayer == rooms[data.room].nbPlayer) {
         data.start = true;
         data.tour = 1;
-        data.corbeau = nbCorbeau[data.level];
         rooms[data.room].corbeau = data.corbeau;
         rooms[data.room].listesCartes = cartes.get(rooms[data.room].level, rooms[data.room].nbPlayer);
         rooms[data.room].vision = cartes.vision(vision);
@@ -561,15 +569,17 @@ socketIOWebSocketServer.on('connection', (socket) => {
               cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabFantom),
               vision: recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision)
             };
-            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
+            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes, tour: 1, corbeau: nbCorbeau[data.level], playerListe : rooms[data.room].playerListe});
           } else {
             rooms[data.room].playerListe[i].position = 1;
+            rooms[data.room].playerListe[i].nbJetonOK = jetonClairvoyance[allSelectPlayer];
+            rooms[data.room].playerListe[i].nbJetonNOK = jetonClairvoyance[allSelectPlayer];
             cartes = {
               personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
               cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabVoyant),
               cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabVoyant)
             };
-            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes});
+            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes, tour: 1, corbeau: nbCorbeau[data.level], playerListe : rooms[data.room].playerListe});
           }
         }
         //enregistre les paramètre de la partie dans la base de donné
