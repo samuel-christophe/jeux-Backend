@@ -631,10 +631,20 @@
         //parcour la liste des cartes pour les afficher
         for (var numCartes = 0; numCartes < cartes.personnages.length; numCartes++) {
           if (numCartes < 5) {
-            carteVoyant(numCartes, personnage1, lieux1, objet1);
+            carteVoyant(numCartes, personnage1, 'personnages', 'personnage', 1);
           } else {
-            carteVoyant(numCartes, personnage2, lieux2, objet1);
+            carteVoyant(numCartes, personnage2, 'personnages', 'personnage', 1);
           }
+        }
+        for (var numCartes = 0; numCartes < cartes.cartesLieux.length; numCartes++) {
+          if (numCartes < 5) {
+            carteVoyant(numCartes, lieux1, 'cartesLieux', 'lieu', 2);
+          } else {
+            carteVoyant(numCartes, lieux2, 'cartesLieux', 'lieu', 2);
+          }
+        }
+        for (var numCartes = 0; numCartes < cartes.cartesObjet.length; numCartes++) {
+          carteVoyant(numCartes, objet1, 'cartesObjet', 'objet', 3);
         }
 
         personnage2.appendChild(heure);
@@ -812,7 +822,44 @@
     };
 
     //affichage des cartes des joueur
-    function carteVoyant (numCartes, personnage, lieux1, objet1) {
+    function carteVoyant (numCartes, elementParent, nomObjet, chemin, position) {
+      //créeation des éléments et ajout des cartes
+      var cartePetit = document.createElement('img');
+      var carteGrand = document.createElement('img');
+      var carteDiv = document.createElement('div');
+
+      //ajout des src
+      cartePetit.src = 'image/sprite carte.png';
+      carteGrand.src = 'image/carte ' + chemin + '/' + cartes[nomObjet][numCartes].src;
+
+      //ajout des class
+      cartePetit.classList.add('image', 'index1');
+      carteGrand.classList.add('image', 'start', 'grandeCarte');
+      carteDiv.classList.add('couper', 'carte', 'index1');
+
+      //positionnement
+      cartePetit.style.left = cartes[nomObjet][numCartes].left;
+      cartePetit.style.top = cartes[nomObjet][numCartes].top;
+      carteDiv.style.width = cartes[nomObjet][numCartes].width;
+      carteDiv.style.height = cartes[nomObjet][numCartes].height;
+
+      //ajout d'id
+      cartePetit.id = chemin + numCartes;
+      carteDiv.id = nomObjet + numCartes;
+
+      //ajout dans le document
+      carteDiv.appendChild(cartePetit);
+      elementParent.appendChild(carteDiv);
+      jeux.appendChild(carteGrand);
+
+      //ajout des événements
+      afficheImage(cartePetit, carteGrand);
+      afficheImage(carteGrand, carteGrand);
+      contextmenu(cartePetit, [7], position, numCartes);
+
+    };
+    //affichage des cartes des joueur
+    function carteVoyant2 (numCartes, personnage, lieux1, objet1) {
       //créeation des éléments et ajout des cartes
       var persoPetit = document.createElement('img');
       var persoGrand = document.createElement('img');
@@ -829,7 +876,7 @@
       lieuxPetit.src = 'image/sprite carte.png';
       objetPetit.src = 'image/sprite carte.png';
       persoGrand.src = 'image/carte personnage/' + cartes.personnages[numCartes].src;
-      lieuxGrand.src = 'image/cartes lieu/' + cartes.cartesLieux[numCartes].src;
+      lieuxGrand.src = 'image/carte lieu/' + cartes.cartesLieux[numCartes].src;
       objetGrand.src = 'image/carte objet/' + cartes.cartesObjet[numCartes].src;
 
       //ajout des class
