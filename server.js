@@ -215,6 +215,20 @@ socketIOWebSocketServer.on('connection', (socket) => {
             cartesLieux: recupCartes(cartesLieux, rooms[room].listesCartes.cartesLieux.tabVoyant),
             cartesObjet: recupCartes(cartesObjet, rooms[room].listesCartes.cartesObjet.tabVoyant)
           };
+          //parcour la liste des joueurs pour ajouter les cartes vision trouvé
+          for (var i = numJoueur; i < playerListe.length; numJoueur++) {
+            if (rooms[data.room].playerListe[numJoueur].find != undefined) {
+              if (rooms[data.room].playerListe[numJoueur].find.cartesPersonnages) {
+                playerListe[numJoueur].find.cartesPersonnages = recupCartes(cartesPersonnages, rooms[data.room].playerListe[i].positionCartes);
+              }
+              if (rooms[data.room].playerListe[numJoueur].find.cartesLieux) {
+                playerListe[numJoueur].find.cartesLieux = recupCartes(cartesLieux, rooms[data.room].playerListe[i].positionCartes);
+              }
+              if (rooms[data.room].playerListe[numJoueur].find.cartesObjet) {
+                playerListe[numJoueur].find.cartesObjet = recupCartes(cartesObjet, rooms[data.room].playerListe[i].cartesObjet);
+              }
+            }
+          }
           //parcour la liste des joueurs pour envoyer les cartes vision
           for (var i = 1; i < playerListe.length; i++) {
             if (playerListe[i].vision != undefined) {
@@ -491,10 +505,69 @@ socketIOWebSocketServer.on('connection', (socket) => {
     }
   });
 
+  //récupére le chois du fantom
+  socket.on('final vision', function (data) {
+    console.log(data);
+    if ( rooms[data.room].playerListe[data.numPlayer].joue == 'fantom' ) {
+      rooms[data.room].choisCoupable = {};
+      rooms[data.room].choisCoupable.coupable = data.perso;
+      //dispose aléatoirement les cartes choisies.
+      rooms[data.room].choisCoupable.vision = cartes.vision(data.vision);
+      //parcour la liste des joueurs pour envoyer les cartes
+      if (rooms[data.room].nbPlayer > 3) {
+        for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
+          if (rooms[data.room].nbPlayer > 5) {
+            switch (rooms[data.room].playerListe[numJoueur].nbPoint) {
+              case 0:
+              case 1:
+              case 2:
+              case 3:
+              case 4:
+              case 5:
+                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]]) );
+                break;
+              case 6:
+              case 7:
+                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) );
+                break;
+              default:
+                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) );
+
+            }
+            socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, rooms[data.room].choisCoupable[0]) );
+          } else {
+            switch (rooms[data.room].playerListe[numJoueur].nbPoint) {
+              case 0:
+              case 1:
+              case 2:
+              case 3:
+              case 4:
+                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]]) );
+                break;
+              case 5:
+              case 6:
+                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) );
+                break;
+              default:
+                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) );
+
+            }
+          }
+        }
+      } else {
+        socketIOWebSocketServer.in(data.room).emit('last choice', rooms[data.room].choisCoupable);
+      }
+      //enregistre le chois du joueur
+      var partie = db.get().collection('partie');
+      partie.updateOne({room:data.room}, { $set: { choisCoupable: rooms[data.room].choisCoupable } }, function(err,result){});
+    }
+  });
+
   //réinitialise les vision
   socket.on('modify card', function (data) {
 
-    if ( (rooms[data.room].playerListe[data.numPlayer].joue = 'fantom') && (rooms[data.room].corbeau > 0) ) {
+    if ( (rooms[data.room].playerListe[data.numPlayer].joue = 'fantom') && (rooms[data.room].corbeau > 0) && rooms[data.room].corbeauUse ) {
+      rooms[data.room].corbeauUse = false;
       rooms[data.room].corbeau--;
       rooms[data.room].listesCartes.cardVision = [];
       //ajoute les nouvelles cartes et supprime celle de la pile vision
@@ -508,7 +581,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit('receive card', visionFantom);
       //enregistre les cartes vision du joueur
       var partie = db.get().collection('partie');
-      partie.updateOne({room:data.room}, { $set: { listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, corbeau: rooms[data.room].corbeau } }, function(err,result){});
+      partie.updateOne({room:data.room}, { $set: { listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, corbeau: rooms[data.room].corbeau, corbeauUse: rooms[data.room].corbeauUse } }, function(err,result){});
     }
   });
 
@@ -578,6 +651,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       if (data.endTour) {
         console.log('fin tour');
         setTimeout(function () {
+          rooms[data.room].corbeauUse = true;
           rooms[data.room].tour++;
           var numJoueur = 0;
           //parcour la liste des joueurs
@@ -648,7 +722,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
             // Envoi d'un message au client WebSocket.
             socketIOWebSocketServer.in(data.room).emit('confrontation suspects', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
             //enregistre les modifications
-            partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour, suspect: rooms[data.room].suspect } }, function(err,result){});
+            partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour, suspect: rooms[data.room].suspect, corbeauUse: rooms[data.room].corbeauUse } }, function(err,result){});
           } else {
             //vérifie si il s'agit du 8ème tour
             if (rooms[data.room].tour == 8) {
@@ -669,7 +743,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
               // Envoi d'un message au client WebSocket.
               socketIOWebSocketServer.in(data.room).emit('end turn', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
               //enregistre les modifications
-              partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour } }, function(err,result){});
+              partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour, corbeauUse: rooms[data.room].corbeauUse } }, function(err,result){});
             }
           }
         },120000);

@@ -2,7 +2,7 @@
   //Au chargement du document
   window.addEventListener('DOMContentLoaded',() => {
 
-    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, nbPlayer, cartes, div, heure, aiguille, aiguilleHeure, vision, tour, niveau;
+    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, nbPlayer, cartes, div, heure, aiguille, aiguilleHeure, vision, tour, niveau, regles;
     var playerListe = [];
     var playerInfo = [];
     /**
@@ -106,7 +106,6 @@
 
       //vérifie si la partie à déjà commencé
       if (data.start) {
-        console.log('je débute la partie');
         cartes = data.cartes;
         tour = data.tour;
         corbeau = data.corbeau;
@@ -184,7 +183,12 @@
             }
           }
         } else {
-          window.open('http://www.samuelchristophe.com/', 'régles', strWindowFeatures);
+          regles = document.createElement('img');
+          regles.src = 'image/start/rules.jpg';
+          regles.classList.add('image', 'start', 'grandeCarte');
+          jeux.appendChild(regles);
+          afficheImage(this, regles);
+          afficheImage(regles, regles);
         }
       });
     }
@@ -210,13 +214,22 @@
     socket.on('end game', (data) => {
       if (data.end) {
         addChat('la partie est terminé ' + data.message + '!');
-      } else {
-        playerListe[numPlayer] = undefined;
-        nbPlayer--;
       }
     });
     socket.on('confrontation suspects', (data) => {
       playerListe = data.playerListe;
+      if (perso == 'fantom') {
+        //ajoute le menu du choix du coupable
+        for (var i = 1; i <= nbPlayer; i++) {
+          if (perso != 'fantom') {
+            contextmenu(playerInfo[numPlayer].jeton, [9]);
+          }
+        }
+      } else {
+        //supprimer les cartes vision
+        //déplacer les scores et le chat
+        //supprimer  le champ position
+      }
     });
 
     send.addEventListener('submit', (event) => {
@@ -355,7 +368,15 @@
     socket.on('end turn', (data) => {
       playerListe = data.playerListe;
       tour = data.tour;
+      if (perso == 'fantom') {
+        corbeauUse = true;
+      }
       endTurn ();
+    });
+
+    //dernier choix des joueurs
+    socket.on('last choice', (data) => {
+      visionLast ();
     });
 
     //affiche la position du joueur
@@ -719,7 +740,8 @@
     function carteFantom (div, numPlayer, numCartes) {
       //création des éléments et ajout des cartes
       var voyant = document.createElement('div');
-      var jeton = document.createElement('div');
+      playerInfo[numPlayer].jeton = document.createElement('div');
+      var jeton = playerInfo[numPlayer].jeton;
       var image = document.createElement('img');
       var persoPetit = document.createElement('img');
       var persoGrand = document.createElement('img');
@@ -858,83 +880,37 @@
       contextmenu(cartePetit, [7], position, numCartes);
 
     };
-    //affichage des cartes des joueur
-    function carteVoyant2 (numCartes, personnage, lieux1, objet1) {
+
+    //affichage des cartes trouvées des joueur
+    function cardFind (elementParent, nomObjet, chemin) {
       //créeation des éléments et ajout des cartes
-      var persoPetit = document.createElement('img');
-      var persoGrand = document.createElement('img');
-      var lieuxPetit = document.createElement('img');
-      var lieuxGrand = document.createElement('img');
-      var objetPetit = document.createElement('img');
-      var objetGrand = document.createElement('img');
-      var perso = document.createElement('div');
-      var lieux = document.createElement('div');
-      var objet = document.createElement('div');
+      var cartePetit = document.createElement('img');
+      var carteGrand = document.createElement('img');
+      var carteDiv = document.createElement('div');
 
       //ajout des src
-      persoPetit.src = 'image/sprite carte.png';
-      lieuxPetit.src = 'image/sprite carte.png';
-      objetPetit.src = 'image/sprite carte.png';
-      persoGrand.src = 'image/carte personnage/' + cartes.personnages[numCartes].src;
-      lieuxGrand.src = 'image/carte lieu/' + cartes.cartesLieux[numCartes].src;
-      objetGrand.src = 'image/carte objet/' + cartes.cartesObjet[numCartes].src;
+      cartePetit.src = 'image/sprite carte.png';
+      carteGrand.src = 'image/carte ' + chemin + '/' + cartes[nomObjet][numCartes].src;
 
       //ajout des class
-      persoPetit.classList.add('image', 'index1');
-      lieuxPetit.classList.add('image', 'index1');
-      objetPetit.classList.add('image', 'index1');
-      persoGrand.classList.add('image', 'start', 'grandeCarte');
-      lieuxGrand.classList.add('image', 'start', 'grandeCarte');
-      objetGrand.classList.add('image', 'start', 'grandeCarte');
-      perso.classList.add('couper', 'carte', 'index1');
-      lieux.classList.add('couper', 'carte', 'index1');
-      objet.classList.add('couper', 'carte', 'index1');
+      cartePetit.classList.add('image', 'index1');
+      carteGrand.classList.add('image', 'start', 'grandeCarte');
+      carteDiv.classList.add('couper', 'carte', 'index1');
 
       //positionnement
-      persoPetit.style.left = cartes.personnages[numCartes].left;
-      persoPetit.style.top = cartes.personnages[numCartes].top;
-      perso.style.width = cartes.personnages[numCartes].width;
-      perso.style.height = cartes.personnages[numCartes].height;
-
-      lieuxPetit.style.left = cartes.cartesLieux[numCartes].left;
-      lieuxPetit.style.top = cartes.cartesLieux[numCartes].top;
-      lieux.style.width = cartes.cartesLieux[numCartes].width;
-      lieux.style.height = cartes.cartesLieux[numCartes].height;
-
-      objetPetit.style.left = cartes.cartesObjet[numCartes].left;
-      objetPetit.style.top = cartes.cartesObjet[numCartes].top;
-      objet.style.width = cartes.cartesObjet[numCartes].width;
-      objet.style.height = cartes.cartesObjet[numCartes].height;
-
-      //ajout d'id
-      persoPetit.id = 'persoPetit' + numCartes;
-      lieuxPetit.id = 'lieuxPetit' + numCartes;
-      objetPetit.id = 'objetPetit' + numCartes;
-      perso.id = 'perso' + numCartes;
-      lieux.id = 'lieux' + numCartes;
-      objet.id = 'objet' + numCartes;
+      cartePetit.style.left = cartes[nomObjet][numCartes].left;
+      cartePetit.style.top = cartes[nomObjet][numCartes].top;
+      carteDiv.style.width = cartes[nomObjet][numCartes].width;
+      carteDiv.style.height = cartes[nomObjet][numCartes].height;
 
       //ajout dans le document
-      perso.appendChild(persoPetit);
-      lieux.appendChild(lieuxPetit);
-      objet.appendChild(objetPetit);
-      personnage.appendChild(perso);
-      lieux1.appendChild(lieux);
-      objet1.appendChild(objet);
-      jeux.appendChild(persoGrand);
-      jeux.appendChild(lieuxGrand);
-      jeux.appendChild(objetGrand);
+      carteDiv.appendChild(cartePetit);
+      elementParent.appendChild(carteDiv);
+      jeux.appendChild(carteGrand);
 
       //ajout des événements
-      afficheImage(persoPetit, persoGrand);
-      afficheImage(persoGrand, persoGrand);
-      afficheImage(lieuxPetit, lieuxGrand);
-      afficheImage(lieuxGrand, lieuxGrand);
-      afficheImage(objetPetit, objetGrand);
-      afficheImage(objetGrand, objetGrand);
-      contextmenu(persoPetit, [7], 1, numCartes);
-      contextmenu(lieuxPetit, [7], 2, numCartes);
-      contextmenu(objetPetit, [7], 3, numCartes);
+      afficheImage(cartePetit, carteGrand);
+      afficheImage(carteGrand, carteGrand);
 
     };
 
@@ -957,6 +933,20 @@
       jeton.id = numPlayer;
       image.id = joueurVoyant[playerListe[numPlayer].joue - 1];
 
+      //parcour la liste des joueurs pour ajouter les cartes trouvées
+      for (var i = numJoueur; i < playerListe.length; numJoueur++) {
+        if (rooms[data.room].playerListe[numJoueur].find != undefined) {
+          if (rooms[data.room].playerListe[numJoueur].find.cartesPersonnages) {
+            cardFind(voyant, 'personnages', 'personnage');
+          }
+          if (rooms[data.room].playerListe[numJoueur].find.cartesLieux) {
+            cardFind(voyant, 'cartesLieux', 'lieu');
+          }
+          if (rooms[data.room].playerListe[numJoueur].find.cartesObjet) {
+            cardFind(voyant, 'cartesObjet', 'objet');
+          }
+        }
+      }
       //ajoute les cartes vision
       if (playerListe[numPlayer].vision) {
         for (var numeroCarte = 0; numeroCarte < playerListe[numPlayer].vision.length; numeroCarte++) {
@@ -1000,7 +990,7 @@
       contextmenu(jeton, [6]);
     };
 
-    //affichage des cartes des joueurs pour le fantom
+    //affichage des cartes vision pour le fantom
     function visionFantom (vision, numCartes) {
       //créeation des éléments et ajout des cartes
       var visionPetit = document.createElement('img');
@@ -1023,7 +1013,7 @@
       carte.style.height = cartes.vision[numCartes].height;
 
       //ajout d'id
-      carte.id = numCartes;
+      carte.id = 'vision' + numCartes;
 
       //ajout dans le document
       carte.appendChild(visionPetit);
@@ -1033,7 +1023,7 @@
       //ajout des événements
       afficheImage(visionPetit, visionGrand);
       afficheImage(visionGrand, visionGrand);
-      contextmenu(carte, [3,4]);
+      contextmenu(carte, [3,4], numCartes);
 
     };
 
@@ -1044,7 +1034,7 @@
       yMousePosition = e.clientY + window.pageYOffset;
     });
 
-    //affiche les point des joueurs
+    //affiche les points des joueurs
     function createPoint (numJoueur, point) {
       if ( !playerInfo[numJoueur] ) {
         playerInfo[numJoueur] = {};
@@ -1162,17 +1152,54 @@
       }
     };
 
-    //ajouter une carte vision
-    function visionListe(numVision)
+    //choix du coupable
+    function sendVision(perso)
     {
-      choisCarte.vision[numVision.id] = true;
+      if ( choisCoupable.vision[0] && choisCoupable.vision[1] && choisCoupable.vision[2] ) {
+        socket.emit('final vision', {numPlayer: numPlayer, perso: choisCoupable.perso, vision: choisCoupable.vision, room: room});
+      } else {
+        addChat('Vous devez selectionner une carte vision pour le coupable, le lieux et l\'objet.');
+      }
+    };
+
+    //choix du coupable
+    function coupable(perso)
+    {
+      choisCoupable.perso = perso.id;
+      for (var numCartes = 0; numCartes < 7; numCartes++) {
+        contextmenu(document.getElementById('vision' + numCartes), [10, 11, 12], numCartes);
+      }
+    };
+
+    //vision du personnage coupable
+    function visionPerso(e, numVision)
+    {
+      choisCoupable.vision[0] = numVision;
+    };
+
+    //vision du lieux du meutre
+    function visionLieux(e, numVision)
+    {
+      choisCoupable.vision[1] = numVision;
+    };
+
+    //vision de l'objet ayant servie à tué
+    function visionObjet(e, numVision)
+    {
+      choisCoupable.vision[2] = numVision;
+    };
+
+    //ajouter une carte vision
+    function visionListe(e, numVision)
+    {
+      choisCarte.vision[numVision] = true;
     };
 
     //supprimer une carte vision
-    function supVision(numVision)
+    function supVision(e, numVision)
     {
-      if (choisCarte.vision[numVision.id] != null) {
-        choisCarte.vision[numVision.id] = null;
+      if (choisCarte.vision[numVision] != null) {
+        choisCarte.vision[numVision] = null;
       } else {
         addChat('Cette carte n\'a pas été selectionné');
       }
@@ -1290,6 +1317,36 @@
             p.addEventListener('click', function () { annul(element, num); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'Annuler votre vote ?';
+          },function(){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { coupable(element); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'Choisir ce coupable.';
+          },function(){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { visionPerso(element, num); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'Choisissait cette carte pour le coupable.';
+          },function(){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { visionLieux(element, num); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'Choisissait cette carte pour le lieux.';
+          },function(){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { visionObjet(element, num); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'Choisissait cette carte pour l\'objet.';
+          },function(){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { sendVision(element, num); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'Envoyer la vision final.';
           }];
 
         for (var i = 0; i < arrayRightClic.length; i++) {
@@ -1318,6 +1375,7 @@
   var heureTour = [,{div: 'ah1', img: 'a1'},{div: 'ah2', img: 'a2'},{div: 'ah3', img: 'a3'},{div: 'ah4', img: 'a4'},{div: 'ah5', img: 'a5'},{div: 'ah6', img: 'a6'},{div: 'ah7', img: 'a7'}];
   var jetonPoint = [,{couleur : 'noir', numPlayer : 'Quatre'}, {couleur : 'bleu', numPlayer : 'Trois'}, {couleur : 'jaune', numPlayer : 'Deux'}, {couleur : 'blanc', numPlayer : 'Six'}, {couleur : 'rouge', numPlayer : 'Cinq'}, {couleur : 'mauve', numPlayer : 'Un'}];
   var choisCarte = {vision:[],listesJoueur:[]};
+  var choisCoupable = {vision:[]};
   var corbeau, time;
   var corbeauUse = true;
   var progression = [];
