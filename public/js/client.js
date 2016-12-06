@@ -384,7 +384,7 @@
       //le fantome ne vois pas le chois du joueur
       if (perso != 'fantom' && numPlayer != data.numPlayer) {
         console.log(document.getElementById(progressionVoyant[playerListe[data.numPlayer].position] + data.numCartes));
-        document.getElementById(progressionVoyant[playerListe[data.numPlayer].position] + data.numCartes).insertBefore(playerInfo[data.numPlayer].intuition, document.getElementById(progressionVoyant[playerListe[data.numPlayer].position] + data.numCartes).children[0]);
+        document.getElementById(progressionVoyant[playerListe[data.numPlayer].position] + data.numCartes).parentNode.insertBefore(playerInfo[data.numPlayer].intuition, document.getElementById(progressionVoyant[playerListe[data.numPlayer].position] + data.numCartes).children[0]);
         playerInfo[data.numPlayer].choisCarte = data.position;
       }
     });
@@ -423,10 +423,10 @@
         for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
           if (playerListe[numJoueur].joue != 'fantom') {
             //positionne les pions intuition
-            if (playerListe[numPlayer].position < 4) {
-              progression[numPlayer][playerListe[numPlayer].position].insertBefore(playerInfo[numPlayer].intuition, progression[numPlayer][playerListe[numPlayer].position].children[progression[numPlayer][playerListe[numPlayer].position].children.length - 1]);
+            if (playerListe[numJoueur].position < 4) {
+              progression[numJoueur][playerListe[numJoueur].position].insertBefore(playerInfo[numJoueur].intuition, progression[numJoueur][playerListe[numJoueur].position].children[progression[numJoueur][playerListe[numJoueur].position].children.length - 1]);
             } else {
-              div.appendChild(playerInfo[numPlayer].intuition);
+              getElementById(progressionVoyant[playerListe[numJoueur].position] + numJoueur).appendChild(playerInfo[numJoueur].intuition);
             }
           }
         }
@@ -450,16 +450,16 @@
               document.getElementById(numJoueur).parentNode.appendChild( document.getElementById( progressionVoyant[ playerInfo[i].position ] + playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ] ) );
               playerInfo[numJoueur].position = playerListe[numJoueur].position;
 
-              //déplace le pion intuition
-              if (playerListe[numPlayer].position < 4) {
-                progression[numPlayer][playerListe[numPlayer].position].insertBefore(playerInfo[numPlayer].intuition, progression[numPlayer][playerListe[numPlayer].position].children[progression[numPlayer][playerListe[numPlayer].position].children.length - 1]);
-              } else {
-                document.getElementById(numJoueur).appendChild(playerInfo[numPlayer].intuition);
-              }
-              //vérifie les votes
-              for (var i = 0; playerInfo[numJoueur].intuition.children.length > 1 ; i++) {
-                playerInfo[numJoueur].intuition.removeChild(playerInfo[numJoueur].intuition.children[i]);
-              }
+            }
+            //déplace le pion intuition
+            if (playerListe[numJoueur].position < 4) {
+              progression[numJoueur][playerListe[numJoueur].position].insertBefore(playerInfo[numJoueur].intuition, progression[numJoueur][playerListe[numJoueur].position].children[progression[numJoueur][playerListe[numJoueur].position].children.length - 1]);
+            } else {
+              document.getElementById(numJoueur).appendChild(playerInfo[numJoueur].intuition);
+            }
+            //vérifie les votes
+            for (var i = 0; playerInfo[numJoueur].intuition.children.length > 1 ; i++) {
+              playerInfo[numJoueur].intuition.removeChild(playerInfo[numJoueur].intuition.children[i]);
             }
           }
         }
@@ -740,6 +740,9 @@
     function carteFantom (div, numPlayer, numCartes) {
       //création des éléments et ajout des cartes
       var voyant = document.createElement('div');
+      if (!playerInfo[numPlayer]) {
+        playerInfo[numPlayer] = {};
+      }
       playerInfo[numPlayer].jeton = document.createElement('div');
       var jeton = playerInfo[numPlayer].jeton;
       var image = document.createElement('img');
@@ -764,7 +767,7 @@
       lieuxPetit.src = 'image/sprite carte.png';
       objetPetit.src = 'image/sprite carte.png';
       persoGrand.src = 'image/carte personnage/' + cartes.personnages[numCartes].src;
-      lieuxGrand.src = 'image/cartes lieu/' + cartes.cartesLieux[numCartes].src;
+      lieuxGrand.src = 'image/carte lieu/' + cartes.cartesLieux[numCartes].src;
       objetGrand.src = 'image/carte objet/' + cartes.cartesObjet[numCartes].src;
       image.src = 'image/sprite plateau fantom.png';
       intuition.src = '../image/plateau.png';
@@ -803,6 +806,9 @@
       objet.style.height = cartes.cartesObjet[numCartes].height;
 
       //ajout d'id
+      perso.id = 'personnage' + numPlayer;
+      lieux.id = 'lieux' + numPlayer;
+      objet.id = 'objet' + numPlayer;
       jeton.id = numPlayer;
 
       //ajout dans le document
@@ -882,7 +888,7 @@
     };
 
     //affichage des cartes trouvées des joueur
-    function cardFind (elementParent, nomObjet, chemin) {
+    function cardFind (numJoueur, elementParent, nomObjet, chemin) {
       //créeation des éléments et ajout des cartes
       var cartePetit = document.createElement('img');
       var carteGrand = document.createElement('img');
@@ -890,18 +896,18 @@
 
       //ajout des src
       cartePetit.src = 'image/sprite carte.png';
-      carteGrand.src = 'image/carte ' + chemin + '/' + cartes[nomObjet][numCartes].src;
+      carteGrand.src = 'image/carte ' + chemin + '/' + playerListe[numJoueur].find[nomObjet][0].src;
 
       //ajout des class
-      cartePetit.classList.add('image', 'index1');
+      cartePetit.classList.add('image', 'zindex2');
       carteGrand.classList.add('image', 'start', 'grandeCarte');
-      carteDiv.classList.add('couper', 'carte', 'index1');
+      carteDiv.classList.add('couper', 'carte', 'zindex2');
 
       //positionnement
-      cartePetit.style.left = cartes[nomObjet][numCartes].left;
-      cartePetit.style.top = cartes[nomObjet][numCartes].top;
-      carteDiv.style.width = cartes[nomObjet][numCartes].width;
-      carteDiv.style.height = cartes[nomObjet][numCartes].height;
+      cartePetit.style.left = playerListe[numJoueur].find[nomObjet][0].left;
+      cartePetit.style.top = playerListe[numJoueur].find[nomObjet][0].top;
+      carteDiv.style.width = playerListe[numJoueur].find[nomObjet][0].width;
+      carteDiv.style.height = playerListe[numJoueur].find[nomObjet][0].height;
 
       //ajout dans le document
       carteDiv.appendChild(cartePetit);
@@ -926,27 +932,25 @@
 
       //ajout des class
       image.classList.add('image', 'index1');
-      jeton.classList.add('image', 'etuit', 'couper', 'zindex2');
+      jeton.classList.add('etuit', 'couper', 'zindex2');
       voyant.classList.add('div', 'voyant', 'zindex1');
 
       //ajout d'id
       jeton.id = numPlayer;
       image.id = joueurVoyant[playerListe[numPlayer].joue - 1];
 
-      //parcour la liste des joueurs pour ajouter les cartes trouvées
-      for (var i = numJoueur; i < playerListe.length; numJoueur++) {
-        if (rooms[data.room].playerListe[numJoueur].find != undefined) {
-          if (rooms[data.room].playerListe[numJoueur].find.cartesPersonnages) {
-            cardFind(voyant, 'personnages', 'personnage');
-          }
-          if (rooms[data.room].playerListe[numJoueur].find.cartesLieux) {
-            cardFind(voyant, 'cartesLieux', 'lieu');
-          }
-          if (rooms[data.room].playerListe[numJoueur].find.cartesObjet) {
-            cardFind(voyant, 'cartesObjet', 'objet');
-          }
+      if (playerListe[numPlayer].find) {
+        if (playerListe[numPlayer].find.cartesPersonnages) {
+          cardFind(numPlayer, voyant, 'cartesPersonnages', 'personnage');
+        }
+        if (playerListe[numPlayer].find.cartesLieux) {
+          cardFind(numPlayer, voyant, 'cartesLieux', 'lieu');
+        }
+        if (playerListe[numPlayer].find.cartesObjet) {
+          cardFind(numPlayer, voyant, 'cartesObjet', 'objet');
         }
       }
+
       //ajoute les cartes vision
       if (playerListe[numPlayer].vision) {
         for (var numeroCarte = 0; numeroCarte < playerListe[numPlayer].vision.length; numeroCarte++) {
@@ -983,7 +987,7 @@
 
       //ajout dans le document
       jeton.appendChild(image);
-      voyant.appendChild(jeton);
+      voyant.insertBefore(jeton, voyant.children[0]);
       div.appendChild(voyant);
 
       //ajout des événements
@@ -1130,28 +1134,6 @@
       }
     };
 
-    //envoyer les vision au personnage
-    function Perso(perso)
-    {
-      var verifiPresenceUneCarte = false;
-      for (var i = 0; i < choisCarte.vision.length; i++) {
-        if (choisCarte.vision[i] != null) {
-          verifiPresenceUneCarte = true;
-        }
-      }
-      if ( verifiPresenceUneCarte ) {
-        if (!choisCarte.listesJoueur.includes(perso.id)) {
-          choisCarte.listesJoueur.push(perso.id);
-          choisCarte.joueur = perso.id;
-          socket.emit('send card', {numPlayer: numPlayer, perso: perso.id, choisCarte: choisCarte, room: room});
-        } else {
-          addChat('vous avez déjas envoyé des cartes vision au joueur: ' + perso);
-        }
-      } else {
-        addChat('Vous devez selectionner au moins une carte vision.');
-      }
-    };
-
     //choix du coupable
     function sendVision(perso)
     {
@@ -1189,10 +1171,34 @@
       choisCoupable.vision[2] = numVision;
     };
 
+    //envoyer les vision au personnage
+    function Perso(perso)
+    {
+      var verifiPresenceUneCarte = false;
+      for (var i = 0; i < choisCarte.vision.length; i++) {
+        if (choisCarte.vision[i] != null) {
+          verifiPresenceUneCarte = true;
+        }
+      }
+      if ( verifiPresenceUneCarte ) {
+        if (!choisCarte.listesJoueur.includes(perso.id)) {
+          choisCarte.listesJoueur.push(perso.id);
+          choisCarte.joueur = perso.id;
+          socket.emit('send card', {numPlayer: numPlayer, perso: perso.id, choisCarte: choisCarte, room: room});
+        } else {
+          addChat('vous avez déjas envoyé des cartes vision au joueur: ' + perso);
+        }
+      } else {
+        addChat('Vous devez selectionner au moins une carte vision.');
+      }
+    };
+
     //ajouter une carte vision
     function visionListe(e, numVision)
     {
+      console.log(numVision);
       choisCarte.vision[numVision] = true;
+      console.log(choisCarte);
     };
 
     //supprimer une carte vision
@@ -1284,13 +1290,13 @@
           },function(){
             var p = document.createElement('p');
             d.appendChild(p);
-            p.addEventListener('click', function () { visionListe(element); });
+            p.addEventListener('click', function () { visionListe(element, num); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'Ajouter cette carte à la vision';
           },function(){
             var p = document.createElement('p');
             d.appendChild(p);
-            p.addEventListener('click', function () { supVision(element); });
+            p.addEventListener('click', function () { supVision(element, num); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'Supprimer la carte de la vision';
           },function(){
@@ -1379,7 +1385,7 @@
   var corbeau, time;
   var corbeauUse = true;
   var progression = [];
-  var progressionVoyant = [,'perso', 'lieux', 'objet'];
+  var progressionVoyant = [,'personnage', 'lieux', 'objet'];
   var positionPlateau = [,'cartesPersonnages', 'cartesLieux', 'cartesObjet'];
 
 })(window, io);

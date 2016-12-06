@@ -224,6 +224,7 @@ table {
   margin-top: 40px;
 	width: 131px;
 	height: 119px;
+  position: relative;
 }
 #joueurMauve{
   left: -463px;

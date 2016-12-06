@@ -215,22 +215,22 @@ socketIOWebSocketServer.on('connection', (socket) => {
             cartesLieux: recupCartes(cartesLieux, rooms[room].listesCartes.cartesLieux.tabVoyant),
             cartesObjet: recupCartes(cartesObjet, rooms[room].listesCartes.cartesObjet.tabVoyant)
           };
-          //parcour la liste des joueurs pour ajouter les cartes vision trouvé
-          for (var i = numJoueur; i < playerListe.length; numJoueur++) {
-            if (rooms[data.room].playerListe[numJoueur].find != undefined) {
-              if (rooms[data.room].playerListe[numJoueur].find.cartesPersonnages) {
-                playerListe[numJoueur].find.cartesPersonnages = recupCartes(cartesPersonnages, rooms[data.room].playerListe[i].positionCartes);
+          //parcour la liste des joueurs pour ajouter les cartes trouvé
+          for (var numJoueur = 1 ; numJoueur <= rooms[room].nbPlayer; numJoueur++) {
+            if (playerListe[numJoueur].find != undefined) {
+              if (playerListe[numJoueur].find.cartesPersonnages) {
+                playerListe[numJoueur].find.cartesPersonnages = recupCartes(cartesPersonnages, [playerListe[numJoueur].find.cartesPersonnages]);
               }
-              if (rooms[data.room].playerListe[numJoueur].find.cartesLieux) {
-                playerListe[numJoueur].find.cartesLieux = recupCartes(cartesLieux, rooms[data.room].playerListe[i].positionCartes);
+              if (playerListe[numJoueur].find.cartesLieux) {
+                playerListe[numJoueur].find.cartesLieux = recupCartes(cartesLieux, [playerListe[numJoueur].find.cartesLieux]);
               }
-              if (rooms[data.room].playerListe[numJoueur].find.cartesObjet) {
-                playerListe[numJoueur].find.cartesObjet = recupCartes(cartesObjet, rooms[data.room].playerListe[i].cartesObjet);
+              if (playerListe[numJoueur].find.cartesObjet) {
+                playerListe[numJoueur].find.cartesObjet = recupCartes(cartesObjet, [playerListe[numJoueur].find.cartesObjet]);
               }
             }
           }
           //parcour la liste des joueurs pour envoyer les cartes vision
-          for (var i = 1; i < playerListe.length; i++) {
+          for (var i = 1; i <= rooms[room].nbPlayer; i++) {
             if (playerListe[i].vision != undefined) {
               playerListe[i].vision = recupCartes(carteVisions, rooms[room].playerListe[i].vision);
             }
@@ -451,31 +451,39 @@ socketIOWebSocketServer.on('connection', (socket) => {
 
   //vote des joueur
   socket.on('vote', function (data) {
-
     console.log(data);
     if (rooms[data.room].playerListe[data.votePour].vote == undefined) {
       rooms[data.room].playerListe[data.votePour].vote = [];
     }
     //vérifie le vote
     if (data.ok) {
+      console.log(rooms[data.room].playerListe[data.numPlayer].nbJetonOK);
       //vérifie si le joueur peut voter, qu'il ne vote pas pour lui et que le joueur à bien choisi une carte
       if ( (data.numPlayer != data.votePour) && (rooms[data.room].playerListe[data.numPlayer].nbJetonOK > 0) && (rooms[data.room].playerListe[data.votePour].positionCartes != undefined) ) {
+        console.log('il vote pour');
         rooms[data.room].playerListe[data.votePour].vote[data.numPlayer] = true;
         rooms[data.room].playerListe[data.numPlayer].nbJetonOK--;
       }
     } else {
+      console.log('joueur ' + data.numPlayer + ' à ' + rooms[data.room].playerListe[data.numPlayer].nbJetonNOK + ' jeton NOK.');
       if (data.ok === false) {
+        console.log(rooms[data.room].playerListe[data.numPlayer].nbJetonNOK);
         if ( (data.numPlayer != data.votePour) && (rooms[data.room].playerListe[data.numPlayer].nbJetonNOK > 0) && (rooms[data.room].playerListe[data.votePour].positionCartes != undefined) ) {
+          console.log('il vote contre');
+
           rooms[data.room].playerListe[data.votePour].vote[data.numPlayer] = false;
           rooms[data.room].playerListe[data.votePour].nbJetonNOK--;
         }
       } else {
+        console.log('il récupére ses jetons');
         //rajoute ses jeton de vote
         if (rooms[data.room].playerListe[data.votePour].vote[data.numPlayer]) {
+          console.log('ok');
           rooms[data.room].playerListe[data.votePour].nbJetonOK++;
         } else {
           //vérifie qu'il avait bien voté false
           if (rooms[data.room].playerListe[data.votePour].vote[data.numPlayer] === false) {
+            console.log('NOK');
             rooms[data.room].playerListe[data.votePour].nbJetonNOK++;
           }
         }
@@ -524,14 +532,16 @@ socketIOWebSocketServer.on('connection', (socket) => {
               case 3:
               case 4:
               case 5:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]]) );
-                break;
               case 6:
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: (recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]])) } );
+                break;
               case 7:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) );
+              case 8:
+              case 9:
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) } );
                 break;
               default:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) } );
 
             }
           } else {
@@ -541,14 +551,14 @@ socketIOWebSocketServer.on('connection', (socket) => {
               case 2:
               case 3:
               case 4:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]]) );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]]) } );
                 break;
               case 5:
               case 6:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) } );
                 break;
               default:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) } );
 
             }
           }
@@ -593,7 +603,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
     var playerVision = 0;
     var partie = db.get().collection('partie');
     var users = db.get().collection('users');
-    if ( rooms[data.room].playerListe[data.numPlayer].joue == 'fantom' ) {
+    if ( rooms[data.room].playerListe[data.numPlayer].joue == 'fantom' && !rooms[data.room].endTour ) {
       if ( !rooms[data.room].playerListe[data.perso].visionSend ) {
         //enregistre le numéro des cartes envoyé
         data.choisCarte.vision.forEach(function (item, index, array) {
@@ -633,10 +643,11 @@ socketIOWebSocketServer.on('connection', (socket) => {
       }
 
       //vérifie si le tour est fini
-      if (playerVision < (rooms[data.room].playerListe.length - 2) ) {
+      if ( playerVision < (rooms[data.room].playerListe.length - 2) || rooms[data.room].endTour ) {
         data.endTour = false;
       } else {
         data.endTour = true;
+        rooms[data.room].endTour = data.endTour;
       }
       //enregistre les cartes vision des joueur
       partie.updateOne({room:data.room}, { $set: { listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe } }, function(err,result){});
@@ -658,6 +669,9 @@ socketIOWebSocketServer.on('connection', (socket) => {
             //modifi les joueurs autre que fantom
             if ( rooms[data.room].playerListe[i].joue != 'fantom' ) {
               rooms[data.room].playerListe[i].visionSend = undefined;
+              console.log('le joueur ' + rooms[data.room].playerListe[i].username + ' à choisie la carte: ' + rooms[data.room].playerListe[i].positionCartes);
+              console.log('numéro de carte à trouvé dans le tableau fantom : ' + numJoueur);
+              console.log('La carte qu\'il aurait du trouver' + rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[i].position]].tabFantom[numJoueur]);
               //vérifie si le joueur à trouver la bonne carte
               if(rooms[data.room].playerListe[i].positionCartes == rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[i].position]].tabFantom[numJoueur]) {
                 if (rooms[data.room].playerListe[i].find == undefined) {
@@ -698,7 +712,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
                   });
                 }
               }
-              numJoueur++;
               rooms[data.room].playerListe[i].positionCartes = undefined;
               rooms[data.room].playerListe[i].vote = undefined;
               rooms[data.room].playerListe[i].visionSend = undefined;
@@ -712,19 +725,23 @@ socketIOWebSocketServer.on('connection', (socket) => {
                   nbPlayerEnd++;
                 }
               }
+              numJoueur++;
             }
           }
           console.log('envoie des donné au client');
           //vérifie si tous les joueurs ont trouvé toutes leurs cartes
           if ( (nbPlayerEnd + 1) == rooms[data.room].nbPlayer ) {
+            console.log('les joueurs ont trouvé leur suspect');
             rooms[data.room].suspect = true;
             // Envoi d'un message au client WebSocket.
             socketIOWebSocketServer.in(data.room).emit('confrontation suspects', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
             //enregistre les modifications
             partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour, suspect: rooms[data.room].suspect, corbeauUse: rooms[data.room].corbeauUse } }, function(err,result){});
           } else {
+            console.log('les joueurs n\'ont pas trouvé leur suspect');
             //vérifie si il s'agit du 8ème tour
             if (rooms[data.room].tour == 8) {
+              console.log('la partie est perdu');
               rooms[data.room].loseGame = true;
               rooms[data.room].end = true;
               //enregistre la partie perdu
@@ -739,12 +756,14 @@ socketIOWebSocketServer.on('connection', (socket) => {
               socket.leave(data.room);
               socketIOWebSocketServer.in(data.room).emit('end game', { message : 'vous n\'avez pas trouvé tous les suspect dans les temps' });
             } else {
+              console.log('tour suivant envoie des informations');
               // Envoi d'un message au client WebSocket.
               socketIOWebSocketServer.in(data.room).emit('end turn', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
               //enregistre les modifications
               partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour, corbeauUse: rooms[data.room].corbeauUse } }, function(err,result){});
             }
           }
+          rooms[data.room].endTour = undefined;
         },120000);
       }
     }
