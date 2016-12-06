@@ -524,17 +524,16 @@ socketIOWebSocketServer.on('connection', (socket) => {
               case 3:
               case 4:
               case 5:
-                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]]) );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]]) );
                 break;
               case 6:
               case 7:
-                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) );
                 break;
               default:
-                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) );
 
             }
-            socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, rooms[data.room].choisCoupable[0]) );
           } else {
             switch (rooms[data.room].playerListe[numJoueur].nbPoint) {
               case 0:
@@ -542,14 +541,14 @@ socketIOWebSocketServer.on('connection', (socket) => {
               case 2:
               case 3:
               case 4:
-                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]]) );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]]) );
                 break;
               case 5:
               case 6:
-                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) );
                 break;
               default:
-                socketIOWebSocketServer.in(data.room).emit( 'last choice', vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) );
 
             }
           }
