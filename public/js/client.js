@@ -10,8 +10,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    var socket = io('http://192.168.1.30:8888/');
-    // var socket = io('http://10.1.1.174:8888/');
+    // var socket = io('http://192.168.1.30:8888/');
+    var socket = io('http://10.1.1.46:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
 
@@ -383,7 +383,6 @@
     socket.on('positionVoyant', (data) => {
       //le fantome ne vois pas le chois du joueur
       if (perso != 'fantom' && numPlayer != data.numPlayer) {
-        console.log(document.getElementById(progressionVoyant[playerListe[data.numPlayer].position] + data.numCartes));
         document.getElementById(progressionVoyant[playerListe[data.numPlayer].position] + data.numCartes).parentNode.insertBefore(playerInfo[data.numPlayer].intuition, document.getElementById(progressionVoyant[playerListe[data.numPlayer].position] + data.numCartes).children[0]);
         playerInfo[data.numPlayer].choisCarte = data.position;
       }
@@ -426,14 +425,14 @@
             if (playerListe[numJoueur].position < 4) {
               progression[numJoueur][playerListe[numJoueur].position].insertBefore(playerInfo[numJoueur].intuition, progression[numJoueur][playerListe[numJoueur].position].children[progression[numJoueur][playerListe[numJoueur].position].children.length - 1]);
             } else {
-              getElementById(progressionVoyant[playerListe[numJoueur].position] + numJoueur).appendChild(playerInfo[numJoueur].intuition);
+              document.getElementById(progressionVoyant[playerListe[numJoueur].position] + numJoueur).appendChild(playerInfo[numJoueur].intuition);
             }
           }
         }
       } else {
         for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
           if (playerListe[numJoueur].joue != 'fantom') {
-            //met à jour les point des joueurs
+            //met à jour les points des joueurs
             playerInfo[numJoueur].carreJoueur.classList.remove(playerInfo[numJoueur].nbPoint);
             playerInfo[numJoueur].carreJoueur.classList.add('nbPoint' + playerListe[numJoueur].nbPoint);
             playerInfo[numJoueur].nbPoint = ('nbPoint' + playerListe[numJoueur].nbPoint);
@@ -447,13 +446,13 @@
                 }
               }
               //ajoute la carte trouvé
-              document.getElementById(numJoueur).parentNode.appendChild( document.getElementById( progressionVoyant[ playerInfo[i].position ] + playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ] ) );
+              document.getElementById(numJoueur).parentNode.appendChild( document.getElementById( progressionVoyant[ playerInfo[numJoueur].position ] + playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ] ) );
               playerInfo[numJoueur].position = playerListe[numJoueur].position;
 
             }
             //déplace le pion intuition
             if (playerListe[numJoueur].position < 4) {
-              progression[numJoueur][playerListe[numJoueur].position].insertBefore(playerInfo[numJoueur].intuition, progression[numJoueur][playerListe[numJoueur].position].children[progression[numJoueur][playerListe[numJoueur].position].children.length - 1]);
+              progression[playerListe[numJoueur].position].insertBefore(playerInfo[numJoueur].intuition, progression[playerListe[numJoueur].position].children[progression[playerListe[numJoueur].position].children.length - 1]);
             } else {
               document.getElementById(numJoueur).appendChild(playerInfo[numJoueur].intuition);
             }
@@ -1196,9 +1195,7 @@
     //ajouter une carte vision
     function visionListe(e, numVision)
     {
-      console.log(numVision);
       choisCarte.vision[numVision] = true;
-      console.log(choisCarte);
     };
 
     //supprimer une carte vision
@@ -1385,7 +1382,7 @@
   var corbeau, time;
   var corbeauUse = true;
   var progression = [];
-  var progressionVoyant = [,'personnage', 'lieux', 'objet'];
+  var progressionVoyant = [,'personnage', 'lieu', 'objet'];
   var positionPlateau = [,'cartesPersonnages', 'cartesLieux', 'cartesObjet'];
 
 })(window, io);
