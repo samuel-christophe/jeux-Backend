@@ -381,6 +381,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
           data.start = true;
           data.tour = 1;
           data.corbeau = nbCorbeau[rooms[data.room].level];
+          rooms[data.room].tour = 1;
           rooms[data.room].corbeau = nbCorbeau[rooms[data.room].level];
           rooms[data.room].listesCartes = cartes.get(rooms[data.room].level, rooms[data.room].nbPlayer);
           rooms[data.room].vision = cartes.vision(vision);
@@ -649,9 +650,12 @@ socketIOWebSocketServer.on('connection', (socket) => {
       var nbPlayerEnd = 0;
       // si le tour est fini passe au tour suivant
       if (data.endTour) {
+        console.log(rooms[data.room].tour);
         setTimeout(function () {
           rooms[data.room].corbeauUse = true;
+          console.log(rooms[data.room].tour);
           rooms[data.room].tour++;
+          console.log(rooms[data.room].tour);
           var numJoueur = 0;
           //parcour la liste des joueurs
           for (var numeroJoueur = 1; numeroJoueur <= rooms[data.room].nbPlayer; numeroJoueur++) {
@@ -744,6 +748,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
               socket.leave(data.room);
               socketIOWebSocketServer.in(data.room).emit('end game', { message : 'vous n\'avez pas trouvé tous les suspect dans les temps' });
             } else {
+              console.log(rooms[data.room].tour);
               console.log('tour suivant envoie des informations');
               // Envoi d'un message au client WebSocket.
               socketIOWebSocketServer.in(data.room).emit('end turn', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
@@ -775,6 +780,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       if (allSelectPlayer == rooms[data.room].nbPlayer) {
         data.start = true;
         data.tour = 1;
+        rooms[data.room].tour = 1;
         rooms[data.room].corbeau = nbCorbeau[rooms[data.room].level];
         rooms[data.room].listesCartes = cartes.get(rooms[data.room].level, rooms[data.room].nbPlayer);
         rooms[data.room].vision = cartes.vision(vision);
@@ -1114,7 +1120,7 @@ var carteVisions = [
   cP('-774px', '-2115px', '150px', '228px', 'carte 114.jpg'),
   cP('-929px', '-2115px', '150px', '228px', 'carte 115.jpg'),
   cP('-1084px', '-2115px', '150px', '228px', 'carte 116.jpg'),
-  cP('-1238px', '2115px', '149px', '228px', 'carte 117.jpg'),
+  cP('-1238px', '-2115px', '149px', '228px', 'carte 117.jpg'),
   cP('-1394px', '-2115px', '150px', '228px', 'carte 118.jpg'),
   cP('-1549px', '-2115px', '150px', '228px', 'carte 119.jpg'),
   cP('-1704px', '-2115px', '150px', '228px', 'carte 120.jpg'),

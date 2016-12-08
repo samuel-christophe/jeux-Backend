@@ -10,8 +10,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    // var socket = io('http://192.168.1.30:8888/');
-    var socket = io('http://10.1.1.46:8888/');
+    var socket = io('http://192.168.1.30:8888/');
+    // var socket = io('http://10.1.1.46:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
 
@@ -310,6 +310,7 @@
           addChat('tous les personnage ont eux leurs cartes');
         }
       } else {
+        console.log(data.vision);
         playerListe[data.joueur].vision = data.vision
         for (var numeroCarte = 0; numeroCarte < playerListe[data.joueur].vision.length; numeroCarte++) {
           //créeation des éléments et ajout des cartes
@@ -473,7 +474,7 @@
       for (var i = 0; i < debut.length; i) {
         debut[i].parentNode.removeChild(debut[0]);
       }
-
+      console.log('je débute');
       //nav et send à déplacer
       textAffiche.classList.remove('div');
       textAffiche.classList.add('textAffiche');
@@ -667,6 +668,8 @@
           carteVoyant(numCartes, objet1, 'cartesObjet', 'objet', 3);
         }
 
+        heure.classList.remove('image');
+        heure.classList.add('carte');
         personnage2.appendChild(heure);
         lieux2.appendChild(deconnection);
         lieux2.appendChild(navigation);
