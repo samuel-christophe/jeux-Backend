@@ -191,7 +191,9 @@ table {
 	height: 533px;
 }
 .position{
-	width: 2100px;
+  transform: scale(0.6);
+  left: -450px;
+  position: relative;
 }
 .lieu{
   position: absolute;
@@ -327,70 +329,70 @@ table {
   background-image: url('../image/pion/blanc.jpg');
 }
 .blanc{
-  left: -743px;
+  left: -730px;
   top: 0;
   z-index: 2;
 }
 .rouge{
-  left: -853px;
+  left: -777px;
   top: 0;
   z-index: 2;
 }
 .noir{
-  left: -731px;
-  top: -126px;
+  left: -729px;
+  top: -52px;
   z-index: 2;
 }
 .bleu{
-  left: -872px;
-  top: -126px;
+  left: -784px;
+  top: -52px;
   z-index: 2;
 }
 .mauve{
-  left: -732px;
-  top: -246px;
+  left: -728px;
+  top: -101px;
   z-index: 2;
 }
 .jaune{
-  left: -859px;
-  top: -249px;
+  left: -782px;
+  top: -102px;
   z-index: 2;
 }
 .blancintuition{
   position: relative;
   z-index: 2;
-	width: 110px;
-	height: 106px;
+	width: 45px;
+	height: 41px;
 }
 .rougeintuition{
   position: relative;
   z-index: 2;
-	width: 110px;
-	height: 106px;
+	width: 45px;
+	height: 41px;
 }
 .noirintuition{
   position: relative;
   z-index: 2;
-	width: 110px;
-	height: 106px;
+	width: 45px;
+	height: 41px;
 }
 .bleuintuition{
   position: relative;
   z-index: 2;
-	width: 110px;
-	height: 106px;
+	width: 45px;
+	height: 41px;
 }
 .mauveintuition{
   position: relative;
   z-index: 2;
-	width: 110px;
-	height: 106px;
+	width: 45px;
+	height: 41px;
 }
 .jauneintuition{
   position: relative;
   z-index: 2;
-	width: 110px;
-	height: 106px;
+	width: 45px;
+	height: 41px;
 }
 .okblanc{
   background: url('../image/pion/pion blanc ok.png') no-repeat 0 0;

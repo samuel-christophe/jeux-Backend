@@ -347,6 +347,8 @@ socketIOWebSocketServer.on('connection', (socket) => {
         });
         rooms[data.room].fantom = true;
         rooms[data.room].playerListe[data.numPlayer].joue = data.perso;
+        // Envoi d'un message au client WebSocket.
+        socketIOWebSocketServer.in(data.room).emit('mysterium', data);
       } else {
         //vérifie si le fantome a déjà été choisi
         if ( plays['fantom'] != undefined ) {
@@ -364,6 +366,8 @@ socketIOWebSocketServer.on('connection', (socket) => {
               }
             });
             rooms[data.room].playerListe[data.numPlayer].joue = data.perso;
+            // Envoi d'un message au client WebSocket.
+            socketIOWebSocketServer.in(data.room).emit('mysterium', data);
           }
         } else {
           data.fantom = true;
@@ -432,8 +436,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
       }
     }
 
-    // Envoi d'un message au client WebSocket.
-    socketIOWebSocketServer.in(data.room).emit('mysterium', data);
     /**
     On déclare un évènement personnalisé 'mysterium'
     dont la réception sera gérée coté client.
@@ -589,7 +591,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
   socket.on('send card', function (data) {
 
     var nbCardSend = 0;
-    var visionFantom, vision;
+    var visionFantom, vision, endTour;
     var cardSend = [];
     var playerVision = 0;
     var partie = db.get().collection('partie');
@@ -597,6 +599,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
     if ( rooms[data.room].playerListe[data.numPlayer].joue == 'fantom' && !rooms[data.room].endTour ) {
       if ( !rooms[data.room].playerListe[data.perso].visionSend ) {
         //enregistre le numéro des cartes envoyé
+        console.log(data.choisCarte.vision);
         data.choisCarte.vision.forEach(function (item, index, array) {
           if (item) {
             cardSend.push(rooms[data.room].listesCartes.cardVision[index]);
@@ -608,6 +611,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
             }
             nbCardSend++;
           }
+          console.log(rooms[data.room].playerListe[data.perso].vision);
         });
         rooms[data.room].playerListe[data.perso].visionSend = true
       }
@@ -617,7 +621,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
         rooms[data.room].listesCartes.cardVision.splice(rooms[data.room].listesCartes.cardVision.indexOf(item),1);
       });
       //ajoute les nouvelles cartes et supprime celle de la pile vision
-      for (var i = 0; i < nbCardSend; i++) {
+      for (var numCarte = 0; numCarte < nbCardSend; numCarte++) {
         rooms[data.room].listesCartes.cardVision.push(rooms[data.room].vision[0]);
         rooms[data.room].vision.splice(0,1);
       }
@@ -628,28 +632,27 @@ socketIOWebSocketServer.on('connection', (socket) => {
 
       //parcour la liste des joueurs pour vérifier ceux ayant eux leur visions.
       for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-        if ( rooms[data.room].playerListe[i].visionSend && (rooms[data.room].playerListe[i].joue != 'fantom') || (rooms[data.room].playerListe[i].position == 4) ) {
+        if ( ( rooms[data.room].playerListe[i].visionSend || (rooms[data.room].playerListe[i].position == 4) ) && (rooms[data.room].playerListe[i].joue != 'fantom') ) {
           playerVision++;
         }
       }
 
       //vérifie si le tour est fini
       if ( playerVision < (rooms[data.room].playerListe.length - 2) || rooms[data.room].endTour ) {
-        data.endTour = false;
+        endTour = false;
       } else {
-        data.endTour = true;
-        rooms[data.room].endTour = data.endTour;
+        endTour = true;
+        rooms[data.room].endTour = true;
       }
       //enregistre les cartes vision des joueur
       partie.updateOne({room:data.room}, { $set: { listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe } }, function(err,result){});
 
       // Envoi d'un message au client WebSocket.
-      socketIOWebSocketServer.in(data.room).emit('receive card', {joueur: data.perso, vision: vision});
+      socketIOWebSocketServer.in(data.room).emit('receive card', {joueur: data.perso, vision: vision, endTour: rooms[data.room].endTour});
       socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit('receive card', visionFantom);
 
-      var nbPlayerEnd = 0;
       // si le tour est fini passe au tour suivant
-      if (data.endTour) {
+      if (endTour) {
         console.log(rooms[data.room].tour);
         setTimeout(function () {
           rooms[data.room].corbeauUse = true;
@@ -711,6 +714,8 @@ socketIOWebSocketServer.on('connection', (socket) => {
                 rooms[data.room].playerListe[numeroJoueur].nbJetonOK = jetonClairvoyance[rooms[data.room].nbPlayer - 1];
                 rooms[data.room].playerListe[numeroJoueur].nbJetonNOK = jetonClairvoyance[rooms[data.room].nbPlayer - 1];
               }
+
+              var nbPlayerEnd = 0;
               //vérifie si tous les joueurs ont trouvé leurs suspects
               for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
                 if (rooms[data.room].playerListe[i].position == 4) {

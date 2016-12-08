@@ -10,8 +10,9 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    var socket = io('http://192.168.1.30:8888/');
-    // var socket = io('http://10.1.1.46:8888/');
+    // var socket = io('http://192.168.1.30:8888/');
+    var socket = io('http://10.1.1.181:8888/');
+    // var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
 
@@ -47,6 +48,10 @@
     var ecran = document.createElement('img');
     ecran.src='image/ecran/ecran.jpg';
     ecran.addEventListener('load', (event) => {
+    });
+    var regles = document.createElement('img');
+    regles.src='image/start/rules.jpg';
+    regles.addEventListener('load', (event) => {
     });
 
     connection.addEventListener('submit', (event) => {
@@ -95,6 +100,7 @@
 
       //vérifie si le joueur à déjà un personnage
       if (data.joue) {
+        perso = data.joue
         //parcour la liste des lien pour les supprimer
         for (var i = 1; i < HTMLaElement.length ; i) {
           status = HTMLaElement[i].getAttribute('href');
@@ -127,7 +133,7 @@
 
     socket.on('new player', (data) => {
       if ( username != data.name ) {
-        addChat(data.name + ' viens de ce connecter.');
+        addChat(data.name + ' viens de ce connecter.', 10000);
       }
     });
 
@@ -147,44 +153,7 @@
           On déclare un évènement personnalisé 'unJoueur' dont
           la réception sera gérée coté serveur.
           **/
-          if (status == 'fantom') {
-            var li = document.createElement('li');
-            var newContent = document.createTextNode('Choisissait la difficultée');
-            li.appendChild(newContent); //add the text node to the newly created div.
-            difficult.appendChild(li);
-
-            facileLI = document.createElement('li');
-            difficult.appendChild(facileLI);
-            var newContent = document.createTextNode('facile');
-            facileLI.appendChild(newContent); //add the text node to the newly created div.
-            facileLI.addEventListener('click', () => {level(1)});
-
-            moyenLI = document.createElement('li');
-            difficult.appendChild(moyenLI);
-            var newContent = document.createTextNode('moyen');
-            moyenLI.appendChild(newContent); //add the text node to the newly created div.
-            moyenLI.addEventListener('click', () => {level(2)});
-
-            difficileLI = document.createElement('li');
-            difficult.appendChild(difficileLI);
-            var newContent = document.createTextNode('difficile');
-            difficileLI.appendChild(newContent); //add the text node to the newly created div.
-            difficileLI.addEventListener('click', () => {level(3)});
-
-            var br = document.createElement('br');
-            difficult.appendChild(br);
-          }
-
-          //parcour la liste des lien pour les supprimer
-          for (var i = 1; i < HTMLaElement.length; i) {
-            status = HTMLaElement[i].getAttribute('href');
-            if (status != '/regles') {
-              HTMLaElement[i].parentNode.removeChild(HTMLaElement[i]);
-            }
-          }
         } else {
-          regles = document.createElement('img');
-          regles.src = 'image/start/rules.jpg';
           regles.classList.add('image', 'start', 'grandeCarte');
           jeux.appendChild(regles);
           afficheImage(this, regles);
@@ -197,13 +166,13 @@
     deconnection.addEventListener('submit', (event) => {
       event.preventDefault();
       socket.emit('disconnected', {room: room, username: username, numPlayer: numPlayer});
-        addChat('la partie est terminé!');
+      addChat('la partie est terminé!', 120000);
 
     });
 
     socket.on('remove player', (data) => {
       if (data.end) {
-        addChat('la partie est terminé suite au départ de ' + data.username + '!');
+        addChat('la partie est terminé suite au départ de ' + data.username + '!', 120000);
       } else {
         playerListe[numPlayer] = undefined;
         nbPlayer--;
@@ -213,9 +182,11 @@
     //partie perdu
     socket.on('end game', (data) => {
       if (data.end) {
-        addChat('la partie est terminé ' + data.message + '!');
+        addChat('la partie est terminé ' + data.message + '!', 120000);
       }
     });
+
+    //dernière partie
     socket.on('confrontation suspects', (data) => {
       playerListe = data.playerListe;
       if (perso == 'fantom') {
@@ -241,9 +212,9 @@
       if (message.value) {
         if (perso != 'fantom' || perso == undefined) {
           socket.emit('chat', { room: room, username: username, texte: message.value });
-          addChat(username + ' à dit: ' + message.value);
+          addChat(username + ' à dit: ' + message.value, 10000);
         } else {
-          addChat('en tant que fantom vous ne pouvez plus parler.');
+          addChat('en tant que fantom vous ne pouvez plus parler.', 20000);
         }
       } else {
         pseudo.placeholder = 'Veuiller sésir au minumum un caractère';
@@ -264,17 +235,56 @@
       if (data.choisPerso) {
         //le fantome a déjà été choisi
         if (!data.fantom) {
-          //parcour la liste des lien
-          for (var i = 0; i < HTMLaElement.length; i++) {
-            var status = HTMLaElement[i].getAttribute('href');
-            if (status == data.perso){
-              HTMLaElement[i].parentNode.removeChild(HTMLaElement[i]);
-              addChat(data.username + ' à selectionner un personnage.');
+          //si le joueur à envoyé le message
+          if (data.numPlayer == numPlayer) {
+            //parcour la liste des lien pour les supprimer
+            for (var i = 1; i < HTMLaElement.length; i) {
+              status = HTMLaElement[i].getAttribute('href');
+              if (status != '/regles') {
+                HTMLaElement[i].parentNode.removeChild(HTMLaElement[i]);
+              }
+            }
+            //ajoute le choix de la difficulté si il s'agit du fantom
+            if (data.perso == 'fantom') {
+              var li = document.createElement('li');
+              var newContent = document.createTextNode('Choisissait la difficultée');
+              li.appendChild(newContent); //add the text node to the newly created div.
+              difficult.appendChild(li);
+
+              facileLI = document.createElement('li');
+              difficult.appendChild(facileLI);
+              var newContent = document.createTextNode('facile');
+              facileLI.appendChild(newContent); //add the text node to the newly created div.
+              facileLI.addEventListener('click', () => {level(1)});
+
+              moyenLI = document.createElement('li');
+              difficult.appendChild(moyenLI);
+              var newContent = document.createTextNode('moyen');
+              moyenLI.appendChild(newContent); //add the text node to the newly created div.
+              moyenLI.addEventListener('click', () => {level(2)});
+
+              difficileLI = document.createElement('li');
+              difficult.appendChild(difficileLI);
+              var newContent = document.createTextNode('difficile');
+              difficileLI.appendChild(newContent); //add the text node to the newly created div.
+              difficileLI.addEventListener('click', () => {level(3)});
+
+              var br = document.createElement('br');
+              difficult.appendChild(br);
+            }
+          } else {
+            //parcour la liste des lien
+            for (var i = 0; i < HTMLaElement.length; i++) {
+              var status = HTMLaElement[i].getAttribute('href');
+              if (status == data.perso){
+                HTMLaElement[i].parentNode.removeChild(HTMLaElement[i]);
+                addChat(data.username + ' à selectionner un personnage.', 20000);
+              }
             }
           }
           playerListe[data.numPlayer] = data.perso;
         } else {
-          addChat(data.username + ' à selectionner un personnage. vous devez selectionner le fantome en premier');
+          addChat(data.username + ' à selectionner un personnage. vous devez selectionner le fantome en premier', 20000);
         }
       }
     });
@@ -290,7 +300,7 @@
       obtenues dans la console du navigateur Internet.
       **/
       if (username != data.username) {
-        addChat(data.username + ' à dit: ' + data.texte);
+        addChat(data.username + ' à dit: ' + data.texte, 10000);
       }
     });
 
@@ -307,7 +317,7 @@
         }
         jeux.insertBefore(vision, navigation);
         if (data.endTour) {
-          addChat('tous les personnage ont eux leurs cartes');
+          addChat('tous les personnage ont eux leurs cartes', 20000);
         }
       } else {
         console.log(data.vision);
@@ -346,8 +356,8 @@
         if (data.endTour) {
           time = 120;
           endtour();
-          addChat('tous les personnage ont eux leurs cartes vision.');
-          addChat('Il vous reste 2 minute pour positionner votre pion intuition et vos jetons intuition.');
+          addChat('tous les personnage ont eux leurs cartes vision.', 20000);
+          addChat('Il vous reste 2 minute pour positionner votre pion intuition et vos jetons intuition.', 20000);
         }
       }
     });
@@ -355,7 +365,7 @@
     //selection de la difficulté
     socket.on('levelSelect', (data) => {
       if (username != data.username) {
-        addChat(data.username + ' a selectionné la difficultée : ' + niveau[data.level - 1]);
+        addChat(data.username + ' a selectionné la difficultée : ' + niveau[data.level - 1], 20000);
       }
       //début de la partie
       if (data.start){
@@ -389,15 +399,31 @@
       }
     });
 
+    //affiche un message de fin de tour.
+    function endtour () {
+      var temps;
+      addChat('il vous reste: ' + time + 's pour choisir.', 5000);
+      if (time > 10) {
+        time = time - 10;
+        temps = 10000;
+      } else {
+        time--;
+        temps = 1000;
+      }
+      if (time > 0) {
+        window.setTimeout(function(){endtour()}, time);
+      }
+    };
+
     //fonction ajouter message
-    var addChat = (mes) => {
+    var addChat = (mes, times) => {
       // create a new div element
       // and give it some content
       var p = document.createElement('p');
       var newContent = document.createTextNode(mes);
       p.appendChild(newContent); //add the text node to the newly created div.
       chat.appendChild(p);
-      window.setTimeout(function(){p.parentNode.removeChild(p);}, 10000);
+      window.setTimeout(function(){p.parentNode.removeChild(p);}, times);
     };
 
     //chois de la difficulté
@@ -407,7 +433,7 @@
       facileLI.parentNode.removeChild(facileLI);
       moyenLI.parentNode.removeChild(moyenLI);
       difficileLI.parentNode.removeChild(difficileLI);
-      addChat('vous avez selectionné la difficultée : ' + niveau[level - 1]);
+      addChat('vous avez selectionné la difficultée : ' + niveau[level - 1], 100000);
     };
 
     function endTurn() {
@@ -718,6 +744,9 @@
 
     //créé les pions intuition
     function pionsIntuition (numJoueur) {
+      if (!playerInfo[numJoueur]) {
+        playerInfo[numJoueur] = {};
+      }
       playerInfo[numJoueur].intuition = document.createElement('div');
       var divIntuition = document.createElement('div');
       var intuition = document.createElement('img');
@@ -1082,7 +1111,7 @@
         playerInfo[numJoueur].intuition.insertBefore(div, playerInfo[numJoueur].intuition.children[0]);
         contextmenu(div, [8], numJoueur, div);
       } else {
-        addChat('vous ne pouvez pas voter');
+        addChat('vous ne pouvez pas voter', 20000);
       }
     };
 
@@ -1111,7 +1140,7 @@
         playerInfo[numJoueur].intuition.insertBefore(div, playerInfo[numJoueur].intuition.children[0]);
         contextmenu(div, [8], numJoueur, div);
       } else {
-        addChat('vous ne pouvez pas voter');
+        addChat('vous ne pouvez pas voter', 20000);
       }
     };
 
@@ -1132,7 +1161,7 @@
         //suppression du jeton intuition
         element.parentNode.removeChild(element);
       } else {
-        addChat('vous n\'avez pas voté');
+        addChat('vous n\'avez pas voté', 20000);
       }
     };
 
@@ -1142,7 +1171,7 @@
       if ( choisCoupable.vision[0] && choisCoupable.vision[1] && choisCoupable.vision[2] ) {
         socket.emit('final vision', {numPlayer: numPlayer, perso: choisCoupable.perso, vision: choisCoupable.vision, room: room});
       } else {
-        addChat('Vous devez selectionner une carte vision pour le coupable, le lieux et l\'objet.');
+        addChat('Vous devez selectionner une carte vision pour le coupable, le lieux et l\'objet.', 20000);
       }
     };
 
@@ -1174,24 +1203,28 @@
     };
 
     //envoyer les vision au personnage
-    function Perso(perso)
+    function envoieVision(numJoueur)
     {
       var verifiPresenceUneCarte = false;
-      for (var i = 0; i < choisCarte.vision.length; i++) {
-        if (choisCarte.vision[i] != null) {
+      choisCarte.vision.forEach(function (item, index, array) {
+        if (choisCarte.vision[index] != null) {
           verifiPresenceUneCarte = true;
         }
-      }
+      });
       if ( verifiPresenceUneCarte ) {
-        if (!choisCarte.listesJoueur.includes(perso.id)) {
-          choisCarte.listesJoueur.push(perso.id);
-          choisCarte.joueur = perso.id;
-          socket.emit('send card', {numPlayer: numPlayer, perso: perso.id, choisCarte: choisCarte, room: room});
+        console.log(choisCarte.listesJoueur);
+        console.log(numJoueur.id);
+        console.log(choisCarte.listesJoueur.includes(numJoueur.id));
+        if (!choisCarte.listesJoueur.includes(numJoueur.id)) {
+          console.log('envoie des cartes au serveur');
+          choisCarte.listesJoueur.push(numJoueur.id);
+          socket.emit('send card', {numPlayer: numPlayer, perso: numJoueur.id, choisCarte: choisCarte, room: room});
+          choisCarte.vision = [];
         } else {
-          addChat('vous avez déjas envoyé des cartes vision au joueur: ' + perso);
+          addChat('vous avez déjas envoyé des cartes vision au joueur: ' + numJoueur.id, 20000);
         }
       } else {
-        addChat('Vous devez selectionner au moins une carte vision.');
+        addChat('Vous devez selectionner au moins une carte vision.', 20000);
       }
     };
 
@@ -1204,10 +1237,10 @@
     //supprimer une carte vision
     function supVision(e, numVision)
     {
-      if (choisCarte.vision[numVision] != null) {
+      if (choisCarte[numVision] != null) {
         choisCarte.vision[numVision] = null;
       } else {
-        addChat('Cette carte n\'a pas été selectionné');
+        addChat('Cette carte n\'a pas été selectionné', 20000);
       }
     };
 
@@ -1219,7 +1252,7 @@
         corbeau--;
         corbeauUse = false;
       } else {
-        addChat('Vous ne pouvez plus changer vos cartes');
+        addChat('Vous ne pouvez plus changer vos cartes', 20000);
       }
     };
 
@@ -1237,7 +1270,7 @@
         element.parentNode.insertBefore(playerInfo[numPlayer].intuition, element.parentNode.children[0]);
         socket.emit('position', {numPlayer: numPlayer, numCartes: numCartes, room: room});
       } else {
-        addChat('Vous ne pouvez choisir cet position');
+        addChat('Vous ne pouvez choisir cette position', 20000);
       }
     };
 
@@ -1284,7 +1317,7 @@
           },function(){
             var p = document.createElement('p');
             d.appendChild(p);
-            p.addEventListener('click', function () { Perso(element); });
+            p.addEventListener('click', function () { envoieVision(element); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'Envoyer les cartes vision selectionné';
           },function(){
@@ -1363,24 +1396,11 @@
     };
   });
 
-  function endtour () {
-    var temps;
-    addChat('il vous reste: ' + time + 's pour choisir.');
-    if (time > 10) {
-      time = time - 10;
-      temps = 10000;
-    } else {
-      time--;
-      temps = 1000;
-    }
-    window.setTimeout(endtour, temps);
-  };
-
   var joueur = ['joueurQuatre', 'joueurTrois', 'joueurDeux', 'joueurSix', 'joueurCinq', 'joueurUn'];
   var joueurVoyant = ['joueurNoir', 'joueurBleu', 'joueurJaune', 'joueurBlanc', 'joueurRouge', 'joueurMauve'];
   var heureTour = [,{div: 'ah1', img: 'a1'},{div: 'ah2', img: 'a2'},{div: 'ah3', img: 'a3'},{div: 'ah4', img: 'a4'},{div: 'ah5', img: 'a5'},{div: 'ah6', img: 'a6'},{div: 'ah7', img: 'a7'}];
   var jetonPoint = [,{couleur : 'noir', numPlayer : 'Quatre'}, {couleur : 'bleu', numPlayer : 'Trois'}, {couleur : 'jaune', numPlayer : 'Deux'}, {couleur : 'blanc', numPlayer : 'Six'}, {couleur : 'rouge', numPlayer : 'Cinq'}, {couleur : 'mauve', numPlayer : 'Un'}];
-  var choisCarte = {vision:[],listesJoueur:[]};
+  var choisCarte = {vision : [], listesJoueur : []};
   var choisCoupable = {vision:[]};
   var corbeau, time;
   var corbeauUse = true;
