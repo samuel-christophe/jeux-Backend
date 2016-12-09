@@ -751,12 +751,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
             } else {
               console.log(rooms[data.room].tour);
               console.log('tour suivant envoie des informations');
-              rooms[data.room].playerListe.forEach(function (item, index, array) {
-                if (item && item.find) {
-                  playerListe[index].find = recupCartes(carteVisions, item.find);
-                }
-              });
-
               // Envoi d'un message au client WebSocket.
               socketIOWebSocketServer.in(data.room).emit('end turn', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
               //enregistre les modifications
