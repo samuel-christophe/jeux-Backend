@@ -900,7 +900,6 @@ db.connect(url, function(err) {
       for (var i = 0; i < data.length; i++) {
         rooms[data[i].room] = data[i];
       };
-      console.log(rooms);
     });
     var server = app.listen(8080, function() {
       var adressHote = server.address().address;

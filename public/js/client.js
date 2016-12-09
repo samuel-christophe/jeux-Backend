@@ -2,7 +2,7 @@
   //Au chargement du document
   window.addEventListener('DOMContentLoaded',() => {
 
-    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, perso2, nbPlayer, cartes, div, heure, aiguille, aiguilleHeure, vision, tour, niveau, regles;
+    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, perso2, nbPlayer, cartes, div, heure, positionVoyant, aiguille, aiguilleHeure, vision, tour, niveau, regles;
     var playerListe = [];
     var playerInfo = [];
     /**
@@ -10,9 +10,9 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    // var socket = io('http://192.168.1.30:8888/');
+    var socket = io('http://192.168.1.30:8888/');
     // var socket = io('http://10.1.1.181:8888/');
-    var socket = io('http://www.samuelchristophe.com:8888/');
+    // var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
 
@@ -181,9 +181,7 @@
 
     //partie perdu
     socket.on('end game', (data) => {
-      if (data.end) {
-        addChat('la partie est terminé ' + data.message + '!', 120000);
-      }
+      addChat('la partie est terminé ' + data.message + '!', 120000);
     });
 
     //dernière partie
@@ -197,9 +195,24 @@
           }
         }
       } else {
-        //supprimer les cartes vision
-        //déplacer les scores et le chat
+        for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
+          if (playerListe[numJoueur].joue != 'fantom') {
+            //supprime les cartes vision
+            var divElement = document.getElementById(numJoueur).parentNode;
+            divElement.children.forEach(function (item, index, array) {
+              if ( !item.id ) {
+                console.log(item);
+                divElement.removeChild(item);
+              }
+            });
+          }
+        }
+        //déplacer le chat
+        jeux.appendChild(textAffiche);
         //supprimer  le champ position
+        jeux.removeChild(positionVoyant);
+        //affiche les carte des voyant
+        div.classList.remove('couper');
       }
     });
 
@@ -333,6 +346,8 @@
         }
         jeux.insertBefore(vision, navigation);
         if (data.endTour) {
+          time = 120000;
+          endtour();
           addChat('tous les personnage ont eux leurs cartes', 20000);
         }
       } else {
@@ -380,6 +395,9 @@
     //selection de la difficulté
     socket.on('levelSelect', (data) => {
       if (username != data.username) {
+        console.log(data.level);
+        console.log(niveau[data.level - 1]);
+        console.log(data.username + ' a selectionné la difficultée : ' + niveau[data.level - 1]);
         addChat(data.username + ' a selectionné la difficultée : ' + niveau[data.level - 1], 20000);
       }
       //début de la partie
@@ -390,7 +408,7 @@
       }
     });
 
-    //selection de la difficulté
+    //fin d'un tour
     socket.on('end turn', (data) => {
       playerListe = data.playerListe;
       tour = data.tour;
@@ -481,6 +499,8 @@
             playerInfo[numJoueur].nbPoint = ('nbPoint' + playerListe[numJoueur].nbPoint);
 
             //met à jour les cartes trouvé
+            console.log('ancienne position: ' + playerInfo[numJoueur].position);
+            console.log('nouvel position: ' + playerListe[numJoueur].position);
             if ( playerListe[numJoueur].position > playerInfo[numJoueur].position ) {
               //supprime les cartes vision
               var divElement = document.getElementById(numJoueur).parentNode;
@@ -635,10 +655,14 @@
         //affichage des voyant
         for (var i = 1; i <= nbPlayer; i++) {
           if (playerListe[i].joue != 'fantom') {
+            if (!playerInfo[i]) {
+              playerInfo[i] = {};
+            }
+            playerInfo[i].position = playerListe[i].position;
             avatarVoyant(div, i, (playerListe[i].joue - 1));
           }
         }
-        var positionVoyant = document.createElement('div');
+        positionVoyant = document.createElement('div');
         var personnage = document.createElement('div');
         var personnageDiv = document.createElement('div');
         var personnageImage = document.createElement('img');
@@ -1100,6 +1124,9 @@
       pointJoueur.classList.add('image', 'pointImage');
       playerInfo[numJoueur].carreJoueur.classList.add('nbPoint' + playerListe[numJoueur].nbPoint);
       playerInfo[numJoueur].nbPoint = ('nbPoint' + playerListe[numJoueur].nbPoint);
+      console.log(playerListe[numJoueur]);
+      console.log(playerListe[numJoueur].joue);
+      console.log(jetonPoint[playerListe[numJoueur].joue]);
       pointJoueur.id = 'pointJoueur' + jetonPoint[playerListe[numJoueur].joue].numPlayer;
       playerInfo[numJoueur].carreJoueur.appendChild(pointJoueur);
       point.appendChild(playerInfo[numJoueur].carreJoueur);
