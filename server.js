@@ -242,6 +242,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       //crée une room par player
       socket.join(data.username);
       //envoie du message au player
+      console.log(rooms[room].start);
       socketIOWebSocketServer.in(data.username).emit('joincreateconfirm', {
         room: room,
         numPlayer: numPlayer,

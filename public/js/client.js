@@ -504,7 +504,7 @@
             if ( playerListe[numJoueur].position > playerInfo[numJoueur].position ) {
               //supprime les cartes vision
               var divElement = document.getElementById(numJoueur).parentNode;
-              divElement.children.forEach(function (item, index, array) {
+              document.getElementById(numJoueur).parentNode.children.forEach(function (item, index, array) {
                 if ( !item.id ) {
                   console.log(item);
                   divElement.removeChild(item);
