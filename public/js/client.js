@@ -11,8 +11,8 @@
       client socket.io.
     **/
     // var socket = io('http://192.168.1.30:8888/');
-    var socket = io('http://10.1.1.181:8888/');
-    // var socket = io('http://www.samuelchristophe.com:8888/');
+    // var socket = io('http://10.1.1.181:8888/');
+    var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
 
@@ -514,14 +514,13 @@
     }
 
     function debutPartie (){
-
+      console.log('début de partie');
       //supression des éléments innutils
       difficult.parentNode.removeChild(difficult);
 
       for (var i = 0; i < debut.length; i) {
         debut[i].parentNode.removeChild(debut[0]);
       }
-      console.log('je débute');
       //nav et send à déplacer
       textAffiche.classList.remove('div');
       textAffiche.classList.add('textAffiche');
@@ -573,9 +572,9 @@
             numCartes++;
           }
         }
-        for (var i = 0; i < cartes.vision.length; i++) {
-          visionFantom(vision, i);
-        }
+        cartes.vision.forEach(function (item, index, array) {
+          visionFantom(vision, index);
+        });
         if (niveau == 2) {
           var divCorbeau1 = document.createElement('div');
           var imageCorbeau1 = document.createElement('img');
