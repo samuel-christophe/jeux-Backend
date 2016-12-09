@@ -88,12 +88,14 @@ socketIOWebSocketServer.on('connection', (socket) => {
     });
 
     var room, numPlayer, joue, start, tour, corbeau, nbPlayer;
+    console.log(data.username);
     //vérifie si l'utilisateur existe
     users.findOne({username : data.username}, function (err, result) {
 
       // Connection collection
       var users = db.get().collection('users');
       var partie = db.get().collection('partie');
+      console.log(result);
       if (result) {
         //vérifie si le joueur fait partie d'une room
         if (result.partie && result.partie.room) {
