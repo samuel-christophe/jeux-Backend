@@ -317,6 +317,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
     qui correspond à un événement déclaré coté client qui est déclenché lorsqu'un message
     a été reçu en provenance du client WebSocket.
   **/
+  //selection des personnnage
   socket.on('unJoueur', (data) => {
 
     // Affichage du message reçu dans la console.
@@ -325,114 +326,111 @@ socketIOWebSocketServer.on('connection', (socket) => {
     var partie = db.get().collection('partie');
     var users = db.get().collection('users');
     var numPlayer = data.numPlayer;
-    //selection des personnnage
-    if (data.choisPerso) {
-      var allSelectPlayer = 0;
-      var plays = [];
-      for (var i = 1; i < rooms[data.room].playerListe.length; i++) {
-        plays[rooms[data.room].playerListe[i].joue] = rooms[data.room].playerListe[i].joue;
-      }
-      //choix du fantome et le fantome n'a pas déjà été choisi
-      if ( data.perso == 'fantom' && plays['fantom'] == undefined && rooms[data.room].playerListe[data.numPlayer].joue == undefined) {
-        //enregistre la valeur
-        partie.updateOne({room : data.room}, { $set: {playerListe: rooms[data.room].playerListe} }, function(err, result) {
-          if (err) {
-            console.log(err);
-          }
-        });
-        users.updateOne({username : data.username}, { $set: {joue : data.perso} }, function(err, result) {
-          if (err) {
-            console.log(err);
-          }
-        });
-        rooms[data.room].fantom = true;
-        rooms[data.room].playerListe[data.numPlayer].joue = data.perso;
-        // Envoi d'un message au client WebSocket.
-        socketIOWebSocketServer.in(data.room).emit('mysterium', data);
-      } else {
-        //vérifie si le fantome a déjà été choisi
-        if ( plays['fantom'] != undefined ) {
-          //et que le joueur n'a pas déjà un personnage.
-          if ( rooms[data.room].playerListe[data.numPlayer].joue == undefined ) {
-            //enregistre la valeur
-            partie.updateOne({room : data.room}, { $set: {playerListe: rooms[data.room].playerListe}}, function(err, result) {
-              if (err) {
-                console.log(err);
-              }
-            });
-            users.updateOne({username : data.username}, { $set: {joue : data.perso} }, function(err, result) {
-              if (err) {
-                console.log(err);
-              }
-            });
-            rooms[data.room].playerListe[data.numPlayer].joue = data.perso;
-            // Envoi d'un message au client WebSocket.
-            socketIOWebSocketServer.in(data.room).emit('mysterium', data);
-          }
-        } else {
-          data.fantom = true;
+    var allSelectPlayer = 0;
+    var plays = [];
+    for (var i = 1; i < rooms[data.room].playerListe.length; i++) {
+      plays[rooms[data.room].playerListe[i].joue] = rooms[data.room].playerListe[i].joue;
+    }
+    //choix du fantome et le fantome n'a pas déjà été choisi
+    if ( data.perso == 'fantom' && plays['fantom'] == undefined && rooms[data.room].playerListe[data.numPlayer].joue == undefined) {
+      //enregistre la valeur
+      partie.updateOne({room : data.room}, { $set: {playerListe: rooms[data.room].playerListe} }, function(err, result) {
+        if (err) {
+          console.log(err);
         }
-      }
-
-      //vérifie que tous les joueurs on slectionné un personnage, qu'il y en a au moins 2 et que le niveau à était selectionné
-      if (rooms[data.room].nbPlayer > 1 && rooms[data.room].level) {
-        for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-          if (rooms[data.room].playerListe[i].joue) {
-            allSelectPlayer++;
-          }
+      });
+      users.updateOne({username : data.username}, { $set: {joue : data.perso} }, function(err, result) {
+        if (err) {
+          console.log(err);
         }
-        if (allSelectPlayer == rooms[data.room].nbPlayer) {
-          data.start = true;
-          data.tour = 1;
-          data.corbeau = nbCorbeau[rooms[data.room].level];
-          rooms[data.room].tour = 1;
-          rooms[data.room].corbeau = nbCorbeau[rooms[data.room].level];
-          rooms[data.room].listesCartes = cartes.get(rooms[data.room].level, rooms[data.room].nbPlayer);
-          rooms[data.room].vision = cartes.vision(vision);
-          rooms[data.room].listesCartes.cardVision = rooms[data.room].vision.slice(0,7);
-          rooms[data.room].vision = rooms[data.room].vision.slice(7);
-          //enregistre que la partie à commencé pour tous les joueurs
-          for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-            users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true} }, function(err, result) {
-              if (err) {
-                console.log(err);
-              }
-            });
-            if (rooms[data.room].playerListe[i].joue != 'fantom') {
-              rooms[data.room].playerListe[i].position = 1;
-              rooms[data.room].playerListe[i].nbJetonOK = jetonClairvoyance[allSelectPlayer - 1];
-              rooms[data.room].playerListe[i].nbJetonNOK = jetonClairvoyance[allSelectPlayer - 1];
-              rooms[data.room].playerListe[i].nbPoint = 0;
-            }
-          }
-          //envoie les informations aux joueurs
-          for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-            if (rooms[data.room].playerListe[i].joue == 'fantom') {
-              //envoie les cartes du fantome
-              cartes = {
-                personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabFantom),
-                cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabFantom),
-                cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabFantom),
-                vision: recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision)
-              };
-              console.log(rooms[data.room].playerListe);
-              socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes, tour: 1, corbeau: nbCorbeau[rooms[data.room].level], playerListe : rooms[data.room].playerListe, nbPlayer: rooms[data.room].nbPlayer});
-            } else {
-              cartes = {
-                personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
-                cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabVoyant),
-                cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabVoyant)
-              };
-              socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes, tour: 1, playerListe : rooms[data.room].playerListe, nbPlayer: rooms[data.room].nbPlayer});
-            }
-          }
-          //enregistre les paramètre de la partie
-          partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, tour: 1, corbeau : nbCorbeau[rooms[data.room].level]}}, function(err, result) {
+      });
+      rooms[data.room].fantom = true;
+      rooms[data.room].playerListe[data.numPlayer].joue = data.perso;
+      // Envoi d'un message au client WebSocket.
+      socketIOWebSocketServer.in(data.room).emit('mysterium', data);
+    } else {
+      //vérifie si le fantome a déjà été choisi
+      if ( plays['fantom'] != undefined ) {
+        //et que le joueur n'a pas déjà un personnage.
+        if ( rooms[data.room].playerListe[data.numPlayer].joue == undefined ) {
+          //enregistre la valeur
+          partie.updateOne({room : data.room}, { $set: {playerListe: rooms[data.room].playerListe}}, function(err, result) {
             if (err) {
               console.log(err);
             }
           });
+          users.updateOne({username : data.username}, { $set: {joue : data.perso} }, function(err, result) {
+            if (err) {
+              console.log(err);
+            }
+          });
+          rooms[data.room].playerListe[data.numPlayer].joue = data.perso;
+          // Envoi d'un message au client WebSocket.
+          socketIOWebSocketServer.in(data.room).emit('mysterium', data);
         }
+      } else {
+        data.fantom = true;
+      }
+    }
+
+    //vérifie que tous les joueurs on slectionné un personnage, qu'il y en a au moins 2 et que le niveau à était selectionné
+    if (rooms[data.room].nbPlayer > 1 && rooms[data.room].level) {
+      for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
+        if (rooms[data.room].playerListe[i].joue) {
+          allSelectPlayer++;
+        }
+      }
+      if (allSelectPlayer == rooms[data.room].nbPlayer) {
+        data.start = true;
+        data.tour = 1;
+        data.corbeau = nbCorbeau[rooms[data.room].level];
+        rooms[data.room].tour = 1;
+        rooms[data.room].corbeau = nbCorbeau[rooms[data.room].level];
+        rooms[data.room].listesCartes = cartes.get(rooms[data.room].level, rooms[data.room].nbPlayer);
+        rooms[data.room].vision = cartes.vision(vision);
+        rooms[data.room].listesCartes.cardVision = rooms[data.room].vision.slice(0,7);
+        rooms[data.room].vision = rooms[data.room].vision.slice(7);
+        //enregistre que la partie à commencé pour tous les joueurs
+        for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
+          users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {start: true} }, function(err, result) {
+            if (err) {
+              console.log(err);
+            }
+          });
+          if (rooms[data.room].playerListe[i].joue != 'fantom') {
+            rooms[data.room].playerListe[i].position = 1;
+            rooms[data.room].playerListe[i].nbJetonOK = jetonClairvoyance[allSelectPlayer - 1];
+            rooms[data.room].playerListe[i].nbJetonNOK = jetonClairvoyance[allSelectPlayer - 1];
+            rooms[data.room].playerListe[i].nbPoint = 0;
+          }
+        }
+        //envoie les informations aux joueurs
+        for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
+          if (rooms[data.room].playerListe[i].joue == 'fantom') {
+            //envoie les cartes du fantome
+            cartes = {
+              personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabFantom),
+              cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabFantom),
+              cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabFantom),
+              vision: recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision)
+            };
+            console.log(rooms[data.room].playerListe);
+            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes, tour: 1, corbeau: nbCorbeau[rooms[data.room].level], playerListe : rooms[data.room].playerListe, nbPlayer: rooms[data.room].nbPlayer});
+          } else {
+            cartes = {
+              personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
+              cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabVoyant),
+              cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabVoyant)
+            };
+            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes, tour: 1, playerListe : rooms[data.room].playerListe, nbPlayer: rooms[data.room].nbPlayer});
+          }
+        }
+        //enregistre les paramètre de la partie
+        partie.updateOne({room : data.room}, { $set: {start: true, listesCartes:rooms[data.room].listesCartes, vision : rooms[data.room].vision, playerListe : rooms[data.room].playerListe, tour: 1, corbeau : nbCorbeau[rooms[data.room].level]}}, function(err, result) {
+          if (err) {
+            console.log(err);
+          }
+        });
       }
     }
 
@@ -599,7 +597,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
     if ( rooms[data.room].playerListe[data.numPlayer].joue == 'fantom' && !rooms[data.room].endTour ) {
       if ( !rooms[data.room].playerListe[data.perso].visionSend ) {
         //enregistre le numéro des cartes envoyé
-        console.log(data.choisCarte.vision);
         data.choisCarte.vision.forEach(function (item, index, array) {
           if (item) {
             cardSend.push(rooms[data.room].listesCartes.cardVision[index]);
@@ -611,7 +608,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
             }
             nbCardSend++;
           }
-          console.log(rooms[data.room].playerListe[data.perso].vision);
         });
         rooms[data.room].playerListe[data.perso].visionSend = true
       }
@@ -628,7 +624,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
 
       //récupérer les cartes pour les envoyer
       visionFantom = recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision);
-      vision = recupCartes(carteVisions, rooms[data.room].playerListe[data.perso].vision);
+      vision = recupCartes(carteVisions, cardSend);
 
       //parcour la liste des joueurs pour vérifier ceux ayant eux leur visions.
       for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
@@ -653,7 +649,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
 
       // si le tour est fini passe au tour suivant
       if (endTour) {
-        console.log(rooms[data.room].tour);
+        console.log('fint du tour: ' + rooms[data.room].tour);
         setTimeout(function () {
           rooms[data.room].corbeauUse = true;
           console.log(rooms[data.room].tour);
@@ -755,6 +751,12 @@ socketIOWebSocketServer.on('connection', (socket) => {
             } else {
               console.log(rooms[data.room].tour);
               console.log('tour suivant envoie des informations');
+              rooms[data.room].playerListe.forEach(function (item, index, array) {
+                if (item && item.find) {
+                  playerListe[index].find = recupCartes(carteVisions, item.find);
+                }
+              });
+
               // Envoi d'un message au client WebSocket.
               socketIOWebSocketServer.in(data.room).emit('end turn', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
               //enregistre les modifications

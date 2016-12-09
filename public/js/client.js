@@ -2,7 +2,7 @@
   //Au chargement du document
   window.addEventListener('DOMContentLoaded',() => {
 
-    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, nbPlayer, cartes, div, heure, aiguille, aiguilleHeure, vision, tour, niveau, regles;
+    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, perso2, nbPlayer, cartes, div, heure, aiguille, aiguilleHeure, vision, tour, niveau, regles;
     var playerListe = [];
     var playerInfo = [];
     /**
@@ -236,12 +236,29 @@
         //le fantome a déjà été choisi
         if (!data.fantom) {
           //si le joueur à envoyé le message
-          if (data.numPlayer == numPlayer) {
-            //parcour la liste des lien pour les supprimer
-            for (var i = 1; i < HTMLaElement.length; i) {
-              status = HTMLaElement[i].getAttribute('href');
-              if (status != '/regles') {
-                HTMLaElement[i].parentNode.removeChild(HTMLaElement[i]);
+          if ((data.numPlayer == numPlayer)) {
+            if (data.perso == 'fantom' || nbPlayer > 3) {
+              //parcour la liste des liens pour les supprimer
+              for (var i = 1; i < HTMLaElement.length; i) {
+                status = HTMLaElement[i].getAttribute('href');
+                if (status != '/regles') {
+                  HTMLaElement[i].parentNode.removeChild(HTMLaElement[i]);
+                }
+              }
+              perso = data.perso;
+            } else {
+              //parcour la liste des lien
+              for (var i = 0; i < HTMLaElement.length; i++) {
+                var status = HTMLaElement[i].getAttribute('href');
+                if (status == data.perso){
+                  HTMLaElement[i].parentNode.removeChild(HTMLaElement[i]);
+                  addChat(data.username + ' à selectionner un personnage.', 20000);
+                }
+              }
+              if (perso) {
+                perso2 = data.perso;
+              } else {
+                perso = data.perso;
               }
             }
             //ajoute le choix de la difficulté si il s'agit du fantom
@@ -282,7 +299,6 @@
               }
             }
           }
-          playerListe[data.numPlayer] = data.perso;
         } else {
           addChat(data.username + ' à selectionner un personnage. vous devez selectionner le fantome en premier', 20000);
         }
@@ -320,7 +336,6 @@
           addChat('tous les personnage ont eux leurs cartes', 20000);
         }
       } else {
-        console.log(data.vision);
         playerListe[data.joueur].vision = data.vision
         for (var numeroCarte = 0; numeroCarte < playerListe[data.joueur].vision.length; numeroCarte++) {
           //créeation des éléments et ajout des cartes
@@ -354,7 +369,7 @@
         }
 
         if (data.endTour) {
-          time = 120;
+          time = 120000;
           endtour();
           addChat('tous les personnage ont eux leurs cartes vision.', 20000);
           addChat('Il vous reste 2 minute pour positionner votre pion intuition et vos jetons intuition.', 20000);
@@ -402,16 +417,16 @@
     //affiche un message de fin de tour.
     function endtour () {
       var temps;
-      addChat('il vous reste: ' + time + 's pour choisir.', 5000);
-      if (time > 10) {
-        time = time - 10;
+      if (time > 10000) {
+        time = time - 10000;
         temps = 10000;
       } else {
-        time--;
+        time = time - 1000;
         temps = 1000;
       }
+      addChat('il vous reste: ' + time / 1000 + 's pour choisir.', temps);
       if (time > 0) {
-        window.setTimeout(function(){endtour()}, time);
+        window.setTimeout(function(){endtour()}, temps);
       }
     };
 
@@ -456,6 +471,7 @@
             }
           }
         }
+        choisCarte = {vision : [], listesJoueur : []};
       } else {
         for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
           if (playerListe[numJoueur].joue != 'fantom') {
@@ -464,16 +480,21 @@
             playerInfo[numJoueur].carreJoueur.classList.add('nbPoint' + playerListe[numJoueur].nbPoint);
             playerInfo[numJoueur].nbPoint = ('nbPoint' + playerListe[numJoueur].nbPoint);
 
-            //met à jour les cartes trouver
+            //met à jour les cartes trouvé
             if ( playerListe[numJoueur].position > playerInfo[numJoueur].position ) {
-              //supprime les carte vision
-              for (var i = 0; i < document.getElementById(numJoueur).parentNode.children.length; i++) {
-                if ( !document.getElementById(numJoueur).parentNode.children[i].id ) {
-                  document.getElementById(numJoueur).parentNode.removeChild(document.getElementById(numJoueur).parentNode.children[i]);
+              //supprime les cartes vision
+              var divElement = document.getElementById(numJoueur).parentNode;
+              divElement.children.forEach(function (item, index, array) {
+                if ( !item.id ) {
+                  console.log(item);
+                  divElement.removeChild(item);
                 }
-              }
-              //ajoute la carte trouvé
-              document.getElementById(numJoueur).parentNode.appendChild( document.getElementById( progressionVoyant[ playerInfo[numJoueur].position ] + playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ] ) );
+              });
+              //ajoute la carte trouvé : carteDiv.id = nomObjet + numCartes; var idCartesSuspect = ['personnages', 'cartesLieux', 'cartesObjet'];
+              console.log(idCartesSuspect[ playerInfo[numJoueur].position ]);
+              console.log(playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ]);
+              console.log(document.getElementById( idCartesSuspect[ playerInfo[numJoueur].position ] + playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ] ));
+              divElement.appendChild( document.getElementById( idCartesSuspect[ playerInfo[numJoueur].position ] + playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ] ) );
               playerInfo[numJoueur].position = playerListe[numJoueur].position;
 
             }
@@ -880,7 +901,7 @@
 
     };
 
-    //affichage des cartes des joueur
+    //affichage des cartes des voyants
     function carteVoyant (numCartes, elementParent, nomObjet, chemin, position) {
       //créeation des éléments et ajout des cartes
       var cartePetit = document.createElement('img');
@@ -1407,5 +1428,6 @@
   var progression = [];
   var progressionVoyant = [,'personnage', 'lieu', 'objet'];
   var positionPlateau = [,'cartesPersonnages', 'cartesLieux', 'cartesObjet'];
+  var idCartesSuspect = [,'personnages', 'cartesLieux', 'cartesObjet'];
 
 })(window, io);
