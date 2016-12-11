@@ -87,7 +87,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       numPartie = count;
     });
 
-    var room, numPlayer, joue, start, tour, corbeau, nbPlayer;
+    var room, numPlayer, joue, start, tour, corbeau, nbPlayer, suspect;
     console.log(data.username);
     //vérifie si l'utilisateur existe
     users.findOne({username : data.username}, function (err, result) {
@@ -112,6 +112,9 @@ socketIOWebSocketServer.on('connection', (socket) => {
             tour = rooms[room].tour;
             if (joue == 'fantom') {
               corbeau = rooms[room].corbeau;
+            }
+            if ( rooms[room].suspect ) {
+              suspect = rooms[room].suspect;
             }
           }
           // ajout dans la room
@@ -252,7 +255,8 @@ socketIOWebSocketServer.on('connection', (socket) => {
         nbPlayer: rooms[room].nbPlayer,
         cartes: cartes,
         tour : rooms[room].tour,
-        corbeau : corbeau
+        corbeau : corbeau,
+        suspect : suspect
       });
       // Let the existing players in room know there is a new player
       // TODO -- Add room number to this / Player class
@@ -511,13 +515,14 @@ socketIOWebSocketServer.on('connection', (socket) => {
   socket.on('final vision', function (data) {
     console.log(data);
     if ( rooms[data.room].playerListe[data.numPlayer].joue == 'fantom' ) {
+      var lastVision = [];
       rooms[data.room].choisCoupable = {};
       rooms[data.room].choisCoupable.coupable = data.perso;
       //dispose aléatoirement les cartes choisies.
       rooms[data.room].choisCoupable.vision = cartes.vision(data.vision);
       //parcour la liste des joueurs pour envoyer les cartes
       if (rooms[data.room].nbPlayer > 3) {
-        for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
+        for (var numJoueur = 1; numJoueur <= rooms[data.room].nbPlayer; numJoueur++) {
           if (rooms[data.room].nbPlayer > 5) {
             switch (rooms[data.room].playerListe[numJoueur].nbPoint) {
               case 0:
@@ -527,32 +532,36 @@ socketIOWebSocketServer.on('connection', (socket) => {
               case 4:
               case 5:
               case 6:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: (recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]])) } );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'last choice', { vision: (recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]])) } );
                 break;
               case 7:
               case 8:
               case 9:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) } );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'last choice', { vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) } );
                 break;
               default:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) } );
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'last choice', { vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) } );
 
             }
           } else {
+            console.log('moins de 5 joueur et plus de 3');
             switch (rooms[data.room].playerListe[numJoueur].nbPoint) {
               case 0:
               case 1:
               case 2:
               case 3:
               case 4:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]]) } );
+                console.log('moins de 5 points et 1 carte');
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'last choice', { vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0]]) } );
                 break;
               case 5:
               case 6:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) } );
+                console.log('5 ou 6 points et 2 cartes');
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'last choice', { vision: recupCartes(carteVisions, [rooms[data.room].choisCoupable.vision[0],rooms[data.room].choisCoupable.vision[1]]) } );
                 break;
               default:
-                socketIOWebSocketServer.in(rooms[data.room].playerListe[data.numPlayer].username).emit( 'last choice', { vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) } );
+                console.log('7 points ou plus et 3 cartes');
+                socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'last choice', { vision: recupCartes(carteVisions, rooms[data.room].choisCoupable.vision) } );
 
             }
           }
@@ -750,7 +759,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
                 });
               }
               socket.leave(data.room);
-              socketIOWebSocketServer.in(data.room).emit('end game', { message : 'vous n\'avez pas trouvé tous les suspect dans les temps' });
+              socketIOWebSocketServer.in(data.room).emit('end game', { message : 'Vous n\'avez pas trouvé tous les suspects dans le temps.' });
             } else {
               console.log(rooms[data.room].tour);
               console.log('tour suivant envoie des informations');
