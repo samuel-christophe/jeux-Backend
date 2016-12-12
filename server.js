@@ -520,7 +520,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
 
     //enregistre le vote
     rooms[data.room].playerListe[data.numPlayer].choixCoupable = data.perso;
-    rooms[data.room].playerListe[data.numPlayer].forEach(function(item, index, array){
+    rooms[data.room].playerListe.forEach(function(item, index, array){
       if (item && item.choixCoupable) {
         totalVote++;
         if (totalChoix[item.choixCoupable]) {
