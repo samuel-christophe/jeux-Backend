@@ -436,6 +436,16 @@
       endTurn ();
     });
 
+    //fin d'un tour
+    socket.on('vote end', (data) => {
+      if (data.gagner) {
+
+        addChat('vous avez trouvé le coupable ' + data.coupable + ' avec: ' + data.nbVote + ' nombre de voie');
+      } else {
+        addChat('vous n\'avez pas trouvé le coupable avec: ' + data.nbVote + ' nombre de voie pour ' + data.coupable + '. le bon coupable été le suspect numéro: ' + data.vision );
+      }
+    });
+
     //dernier choix des joueurs
     socket.on('last choice', (data) => {
       console.log(data);

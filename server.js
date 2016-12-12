@@ -538,7 +538,11 @@ socketIOWebSocketServer.on('connection', (socket) => {
         idx = totalChoix.indexOf(temp, idx + 1);
       }
       if ( coupable.length == 1 ) {
-        socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'vote end', { vision: coupable, coupable: rooms[data.room].choisCoupable.coupable } );
+        if (coupable == rooms[data.room].choisCoupable.coupable) {
+          socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'vote end', { vision: coupable, coupable: rooms[data.room].choisCoupable.coupable, nbVote : temp, gagner : true } );
+        } else {
+          socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'vote end', { vision: coupable, coupable: rooms[data.room].choisCoupable.coupable, nbVote : temp, gagner : false } );
+        }
       } else {
         //trouver qui à voté pour ce coupable
       }
