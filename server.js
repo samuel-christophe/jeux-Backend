@@ -554,7 +554,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       rooms[data.room].choisCoupable.coupable = data.perso;
       //dispose aléatoirement les cartes choisies.
       data.vision.forEach(function (item, index, array) {
-        lastVision.push(rooms[data.room].listesCartes.cardVision[index]);
+        lastVision.push(rooms[data.room].listesCartes.cardVision[item]);
       });
       rooms[data.room].choisCoupable.vision = cartes.vision(lastVision);
       //parcour la liste des joueurs pour envoyer les cartes
