@@ -10,8 +10,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    var socket = io('http://192.168.1.30:8888/');
-    // var socket = io('http://10.1.1.181:8888/');
+    // var socket = io('http://192.168.1.30:8888/');
+    var socket = io('http://10.1.1.19:8888/');
     // var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
@@ -187,27 +187,41 @@
 
     //dernière partie
     socket.on('confrontation suspects', (data) => {
+      console.log(playerInfo);
       playerListe = data.playerListe;
       if (perso == 'fantom') {
         //ajoute le menu du choix du coupable
-        for (var i = 1; i <= nbPlayer; i++) {
-          if (perso != 'fantom') {
-            contextmenu(playerInfo[numPlayer].jeton, [9, 13]);
-          }
-        }
+        playerInfo.forEach ( function (item, numJoueur, array) {
+          //déplace le pion intuition
+          item.jeton.appendChild(item.intuition);
+          contextmenu(item.jeton, [9, 13]);
+        });
       } else {
-        for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
-          if (playerListe[numJoueur].joue != 'fantom') {
+        playerListe.forEach ( function (item, numJoueur, array) {
+          if (item && item.joue != 'fantom') {
             //supprime les cartes vision
             var divElement = document.getElementById(numJoueur).parentNode;
-            for (var i = 0; i < divElement.children.length; i++) {
-              if ( !item.id ) {
-                console.log(item);
-                divElement.removeChild(item);
+            for (var i = 0; i < divElement.children.length; i) {
+              if ( !divElement.children[i].id ) {
+                divElement.removeChild(divElement.children[i]);
+              } else {
+                i++;
+              }
+            }
+
+            //ajoute la carte trouvé : carteDiv.id = nomObjet + numCartes; var idCartesSuspect = ['personnages', 'cartesLieux', 'cartesObjet'];
+            if (playerInfo[numJoueur].position) {
+              divElement.appendChild( document.getElementById( idCartesSuspect[ playerInfo[numJoueur].position ] + playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ] ) );
+              playerInfo[numJoueur].position = playerListe[numJoueur].position;
+              //déplace le pion intuition
+              document.getElementById(numJoueur).appendChild(playerInfo[numJoueur].intuition);
+              //vérifie les votes
+              for (var j = 0; playerInfo[numJoueur].intuition.children.length > 1 ; j++) {
+                playerInfo[numJoueur].intuition.removeChild(playerInfo[numJoueur].intuition.children[i]);
               }
             }
           }
-        }
+        });
         //déplacer le chat
         jeux.appendChild(textAffiche);
         //supprimer  le champ position
@@ -216,6 +230,7 @@
         div.classList.remove('couper');
       }
     });
+
 
     send.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -438,13 +453,14 @@
     function endtour () {
       var temps;
       if (time > 10000) {
-        time = time - 10000;
         temps = 10000;
+        addChat('il vous reste: ' + time / 1000 + 's pour choisir.', temps);
+        time = time - 10000;
       } else {
-        time = time - 1000;
         temps = 1000;
+        addChat('il vous reste: ' + time / 1000 + 's pour choisir.', temps);
+        time = time - 1000;
       }
-      addChat('il vous reste: ' + time / 1000 + 's pour choisir.', temps);
       if (time > 0) {
         window.setTimeout(function(){endtour()}, temps);
       }
@@ -506,12 +522,13 @@
             if ( playerListe[numJoueur].position > playerInfo[numJoueur].position ) {
               //supprime les cartes vision
               var divElement = document.getElementById(numJoueur).parentNode;
-              for (var i = 0; i > divElement.length ; i++) {
+              for (var i = 0; i < divElement.children.length; i) {
                 if ( !divElement.children[i].id ) {
-                  console.log(divElement.children[i]);
                   divElement.removeChild(divElement.children[i]);
+                } else {
+                  i++;
                 }
-              };
+              }
               //ajoute la carte trouvé : carteDiv.id = nomObjet + numCartes; var idCartesSuspect = ['personnages', 'cartesLieux', 'cartesObjet'];
               console.log(idCartesSuspect[ playerInfo[numJoueur].position ]);
               console.log(playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ]);
@@ -582,7 +599,6 @@
       //si le joueur joue le fantom
       if (perso == 'fantom') {
         navigation.style.top = '722px';
-        position.style.top = '236px';
         position.classList.remove('position');
         position.classList.add('div');
         position.appendChild(heure);
@@ -630,7 +646,7 @@
           var divCorbeau = document.createElement('div');
           var imageCorbeau = document.createElement('img');
 
-          divCorbeau.classList.add('image', 'couper', 'corbeauDivTrois');
+          divCorbeau.classList.add('couper', 'corbeauDivTrois');
           imageCorbeau.classList.add('image', 'corbeauTrois');
 
           imageCorbeau.src = 'image/sprite plateau fantom.png';
@@ -655,15 +671,18 @@
         div.classList.remove('avatar');
         div.classList.add('avatarVoyant', 'index1', 'couper');
         //affichage des voyant
-        for (var i = 1; i <= nbPlayer; i++) {
-          if (playerListe[i].joue != 'fantom') {
-            if (!playerInfo[i]) {
-              playerInfo[i] = {};
+        playerListe.forEach (function(item, index, array) {
+          if (item && item.joue != 'fantom') {
+            console.log(item);
+            if (!playerInfo[index]) {
+              playerInfo[index] = {};
             }
-            playerInfo[i].position = playerListe[i].position;
-            avatarVoyant(div, i, (playerListe[i].joue - 1));
+            playerInfo[index].position = parseInt(item.position);
+            console.log(playerInfo[index].position);
+            avatarVoyant(div, index, (item.joue - 1));
           }
-        }
+        });
+        console.log(playerInfo);
         //vérifie si il s'agit de la fase des suspects
         if (suspect) {
           //affiche les carte des voyant
@@ -876,9 +895,6 @@
       var perso = document.createElement('div');
       var lieux = document.createElement('div');
       var objet = document.createElement('div');
-      if (!playerInfo[numPlayer]) {
-        playerInfo[numPlayer] = {};
-      }
       playerInfo[numPlayer].intuition = document.createElement('div');
       var divIntuition = document.createElement('div');
       var intuition = document.createElement('img');
@@ -956,7 +972,7 @@
       if (playerListe[numPlayer].position < 4) {
         progression[numPlayer][playerListe[numPlayer].position].insertBefore(playerInfo[numPlayer].intuition, progression[numPlayer][playerListe[numPlayer].position].children[progression[numPlayer][playerListe[numPlayer].position].children.length - 1]);
       } else {
-        div.appendChild(playerInfo[numPlayer].intuition);
+        jeton.appendChild(playerInfo[numPlayer].intuition);
       }
 
       //ajout des événements
@@ -1049,6 +1065,7 @@
     function avatarVoyant (div, numPlayer, numCartes) {
       //créeation des éléments et ajout des cartes
       var voyant = document.createElement('div');
+      playerInfo[numPlayer].voyant = voyant;
       var jeton = document.createElement('div');
       var image = document.createElement('img');
 

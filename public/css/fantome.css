@@ -41,19 +41,22 @@
 }
 .corbeauDivUn{
   left: 750px;
-  top: 980px;
+  position: relative;
+  float: left;
 	width: 265px;
 	height: 160px;
 }
 .corbeauDivDeux{
   left: 530px;
-  top: 980px;
+  position: relative;
+  float: left;
 	width: 209px;
 	height: 204px;
 }
 .corbeauDivTrois{
   left: 270px;
-  top: 980px;
+  position: relative;
+  float: left;
 	width: 245px;
 	height: 190px;
 }

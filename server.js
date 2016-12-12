@@ -661,92 +661,82 @@ socketIOWebSocketServer.on('connection', (socket) => {
 
       // si le tour est fini passe au tour suivant
       if (endTour) {
-        console.log('fint du tour: ' + rooms[data.room].tour);
         setTimeout(function () {
           rooms[data.room].corbeauUse = true;
-          console.log(rooms[data.room].tour);
           rooms[data.room].tour++;
-          console.log(rooms[data.room].tour);
           var numJoueur = 0;
           //parcour la liste des joueurs
           for (var numeroJoueur = 1; numeroJoueur <= rooms[data.room].nbPlayer; numeroJoueur++) {
             //verifie les joueurs autre que fantom
-            if ( rooms[data.room].playerListe[numeroJoueur].joue != 'fantom' && rooms[data.room].playerListe[numeroJoueur].position < 4 ) {
-              rooms[data.room].playerListe[numeroJoueur].visionSend = undefined;
-              //vérifie si le joueur à trouver la bonne carte
-              if(rooms[data.room].playerListe[numeroJoueur].positionCartes == rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabFantom[numJoueur]) {
-                if (rooms[data.room].playerListe[numeroJoueur].find == undefined) {
-                  rooms[data.room].playerListe[numeroJoueur].find = {};
+            if ( rooms[data.room].playerListe[numeroJoueur].joue != 'fantom') {
+              if ( rooms[data.room].playerListe[numeroJoueur].position < 4 ) {
+                rooms[data.room].playerListe[numeroJoueur].visionSend = undefined;
+                //vérifie si le joueur à trouver la bonne carte
+                if(rooms[data.room].playerListe[numeroJoueur].positionCartes == rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabFantom[numJoueur]) {
+                  if (rooms[data.room].playerListe[numeroJoueur].find == undefined) {
+                    rooms[data.room].playerListe[numeroJoueur].find = {};
+                  }
+                  rooms[data.room].playerListe[numeroJoueur].find[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]] = rooms[data.room].playerListe[numeroJoueur].positionCartes;
+                  rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabVoyant.splice( rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabVoyant.indexOf(rooms[data.room].playerListe[numeroJoueur].positionCartes), 1);
+                  rooms[data.room].playerListe[numeroJoueur].positionCartes = undefined;
+                  rooms[data.room].playerListe[numeroJoueur].position++;
+                  //ajoute les point pour avoir trouvé toutes les cates
+                  if (rooms[data.room].playerListe[numeroJoueur].position == 4) {
+                    rooms[data.room].playerListe[numeroJoueur].nbPoint = rooms[data.room].playerListe[numeroJoueur].nbPoint + ( 8 - rooms[data.room].tour );
+                  }
+                  //vérifie si un joueur à voté
+                  if (rooms[data.room].playerListe[numeroJoueur].vote) {
+                    //parcour la liste des votes
+                    rooms[data.room].playerListe[numeroJoueur].vote.forEach(function (item, index, array) {
+                      if (item) {
+                        //ajoute les points
+                        rooms[data.room].playerListe[index].nbPoint++;
+                      }
+                    });
+                  }
+                  rooms[data.room].playerListe[numeroJoueur].vision = undefined;
+                } else {
+                  //le joueur c'est trompé de position
+                  if (rooms[data.room].playerListe[numeroJoueur].vote) {
+                    //parcour la liste des votes
+                    rooms[data.room].playerListe[numeroJoueur].vote.forEach(function (item, index, array) {
+                      if (item === false) {
+                        //ajoute les points
+                        rooms[data.room].playerListe[index].nbPoint++;
+                      }
+                    });
+                  }
                 }
-                rooms[data.room].playerListe[numeroJoueur].find[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]] = rooms[data.room].playerListe[numeroJoueur].positionCartes;
-                console.log('liste des cartes actuel ' + rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabVoyant);
-                console.log('indice de la carte ' + rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabVoyant.indexOf(rooms[data.room].playerListe[numeroJoueur].positionCartes));
-                rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabVoyant.splice( rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabVoyant.indexOf(rooms[data.room].playerListe[numeroJoueur].positionCartes), 1);
-                console.log('après suppression de la carte : ' + rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabVoyant);
                 rooms[data.room].playerListe[numeroJoueur].positionCartes = undefined;
-                rooms[data.room].playerListe[numeroJoueur].position++;
-                //ajoute les point pour avoir trouvé toutes les cates
-                if (rooms[data.room].playerListe[numeroJoueur].position == 4) {
-                  console.log(numeroJoueur);
-                  rooms[data.room].playerListe[numeroJoueur].nbPoint = rooms[data.room].playerListe[numeroJoueur].nbPoint + ( 8 - rooms[data.room].tour );
-                  console.log(rooms[data.room].playerListe[numeroJoueur].nbPoint);
+                rooms[data.room].playerListe[numeroJoueur].vote = undefined;
+                rooms[data.room].playerListe[numeroJoueur].visionSend = undefined;
+                //vérifie si il s'agit du 4ème tour
+                if (rooms[data.room].tour == 4) {
+                  rooms[data.room].playerListe[numeroJoueur].nbJetonOK = jetonClairvoyance[rooms[data.room].nbPlayer - 1];
+                  rooms[data.room].playerListe[numeroJoueur].nbJetonNOK = jetonClairvoyance[rooms[data.room].nbPlayer - 1];
                 }
-                //vérifie si un joueur à voté
-                if (rooms[data.room].playerListe[numeroJoueur].vote) {
-                  //parcour la liste des votes
-                  rooms[data.room].playerListe[numeroJoueur].vote.forEach(function (item, index, array) {
-                    if (item) {
-                      //ajoute les points
-                      rooms[data.room].playerListe[index].nbPoint++;
-                    }
-                  });
-                }
-                rooms[data.room].playerListe[numeroJoueur].vision = undefined;
-              } else {
-                //le joueur c'est trompé de position
-                if (rooms[data.room].playerListe[numeroJoueur].vote) {
-                  //parcour la liste des votes
-                  rooms[data.room].playerListe[numeroJoueur].vote.forEach(function (item, index, array) {
-                    if (item === false) {
-                      //ajoute les points
-                      rooms[data.room].playerListe[index].nbPoint++;
-                    }
-                  });
-                }
-              }
-              rooms[data.room].playerListe[numeroJoueur].positionCartes = undefined;
-              rooms[data.room].playerListe[numeroJoueur].vote = undefined;
-              rooms[data.room].playerListe[numeroJoueur].visionSend = undefined;
-              //vérifie si il s'agit du 4ème tour
-              if (rooms[data.room].tour == 4) {
-                rooms[data.room].playerListe[numeroJoueur].nbJetonOK = jetonClairvoyance[rooms[data.room].nbPlayer - 1];
-                rooms[data.room].playerListe[numeroJoueur].nbJetonNOK = jetonClairvoyance[rooms[data.room].nbPlayer - 1];
-              }
 
-              var nbPlayerEnd = 0;
-              //vérifie si tous les joueurs ont trouvé leurs suspects
-              for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
-                if (rooms[data.room].playerListe[i].position == 4) {
-                  nbPlayerEnd++;
+                var nbPlayerEnd = 0;
+                //vérifie si tous les joueurs ont trouvé leurs suspects
+                for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
+                  if (rooms[data.room].playerListe[i].position == 4) {
+                    nbPlayerEnd++;
+                  }
                 }
               }
               numJoueur++;
             }
           }
-          console.log('envoie des donné au client');
           //vérifie si tous les joueurs ont trouvé toutes leurs cartes
           if ( (nbPlayerEnd + 1) == rooms[data.room].nbPlayer ) {
-            console.log('les joueurs ont trouvé leur suspect');
             rooms[data.room].suspect = true;
             // Envoi d'un message au client WebSocket.
             socketIOWebSocketServer.in(data.room).emit('confrontation suspects', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
             //enregistre les modifications
             partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour, suspect: rooms[data.room].suspect, corbeauUse: rooms[data.room].corbeauUse } }, function(err,result){});
           } else {
-            console.log('les joueurs n\'ont pas trouvé leur suspect');
             //vérifie si il s'agit du 8ème tour
             if (rooms[data.room].tour == 8) {
-              console.log('la partie est perdu');
               rooms[data.room].loseGame = true;
               rooms[data.room].end = true;
               //enregistre la partie perdu
@@ -761,8 +751,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
               socket.leave(data.room);
               socketIOWebSocketServer.in(data.room).emit('end game', { message : 'Vous n\'avez pas trouvé tous les suspects dans le temps.' });
             } else {
-              console.log(rooms[data.room].tour);
-              console.log('tour suivant envoie des informations');
               // Envoi d'un message au client WebSocket.
               socketIOWebSocketServer.in(data.room).emit('end turn', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
               //enregistre les modifications
