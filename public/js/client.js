@@ -616,6 +616,9 @@
 
       //ajout des class
       heure.classList.add('image', 'heure', 'couper');
+      if (tour = 8) {
+        tour = 7;
+      }
       aiguilleHeure.classList.add('image', 'couper', heureTour[tour].div);
       aiguille.classList.add('image', heureTour[tour].img);
       position.classList.add('position');
