@@ -441,7 +441,7 @@
       console.log(data);
       if ( perso != 'fantom'){
         var div = document.createElement('div');
-        data.vision.forEach(function(carte, index, array) {
+        data.vision.forEach(function(cartes, index, array) {
           //créeation des éléments et ajout des cartes
           var visionPetit = document.createElement('img');
           var visionGrand = document.createElement('img');
@@ -449,7 +449,7 @@
 
           //ajout des src
           visionPetit.src = 'image/spriteVisions.png';
-          visionGrand.src = 'image/carte vision/' + carte.src;
+          visionGrand.src = 'image/carte vision/' + cartes.src;
 
           //ajout des class
           visionPetit.classList.add('image', 'index1');
