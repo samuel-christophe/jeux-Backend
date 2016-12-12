@@ -1332,7 +1332,7 @@
     };
 
     //choix du coupable
-    function sendVision(perso)
+    function choixCoupable(perso)
     {
       socket.emit('vote joueur', {numPlayer: numPlayer, perso: perso.id, room: room});
       addChat('Vous avez selectionner le coupable numéro: ' + perso.id, 20000);
@@ -1548,7 +1548,7 @@
           },function(){
             var p = document.createElement('p');
             d.appendChild(p);
-            p.addEventListener('click', function () { choisCoupable(element); });
+            p.addEventListener('click', function () { choixCoupable(element); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'Choisissez ce coupable.';
           }];

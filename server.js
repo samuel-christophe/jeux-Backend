@@ -530,14 +530,14 @@ socketIOWebSocketServer.on('connection', (socket) => {
         }
       }
     });
-    if ( totalVote = rooms[data.room].nbPlayer - 1 ) {
+    if ( totalVote == rooms[data.room].nbPlayer - 1 ) {
       temp = Math.max(totalChois);
       var idx = totalChoix.indexOf(temp);
       while (idx != -1) {
         coupable.push(idx);
         idx = totalChoix.indexOf(temp, idx + 1);
       }
-      if ( coupable.length = 1 ) {
+      if ( coupable.length == 1 ) {
         socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'vote end', { vision: coupable, coupable: rooms[data.room].choisCoupable.coupable } );
       } else {
         //trouver qui à voté pour ce coupable
