@@ -473,7 +473,7 @@
         });
         jeux.appendChild(div);
         for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
-          contextmenu(getElementById(numJoueur), [14]);
+          contextmenu(document.getElementById(numJoueur), [14]);
         }
       }
       // visionLast ();
