@@ -473,7 +473,9 @@
         });
         jeux.appendChild(div);
         for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
-          contextmenu(document.getElementById(numJoueur), [14]);
+          if ( playerListe[numJoueur].joue != 'fantom') {
+            contextmenu(document.getElementById(numJoueur), [14]);
+          }
         }
       }
       // visionLast ();
