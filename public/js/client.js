@@ -1331,7 +1331,7 @@
     //choix du coupable
     function sendVision(perso)
     {
-      socket.emit('vote', {numPlayer: numPlayer, perso: perso.id, room: room});
+      socket.emit('vote joueur', {numPlayer: numPlayer, perso: perso.id, room: room});
       addChat('Vous avez selectionner le coupable numéro: ' + perso.id, 20000);
     };
 

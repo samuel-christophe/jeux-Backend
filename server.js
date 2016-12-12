@@ -512,7 +512,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
   });
 
   //vote des joueurs
-  socket.on('vote', function (data) {
+  socket.on('vote joueur', function (data) {
     var totalVote = 0;
     var totalChoix = [];
     var temp = 0;
