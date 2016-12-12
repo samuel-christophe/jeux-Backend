@@ -489,7 +489,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       }
     }
 
-    //enregistre le chois du joueur
+    //enregistre le choix du joueur
     var partie = db.get().collection('partie');
     partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe } }, function(err,result){});
 
@@ -531,7 +531,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       }
     });
     if ( totalVote == rooms[data.room].nbPlayer - 1 ) {
-      temp = Math.max(totalChois);
+      temp = Math.max(totalChoix);
       var idx = totalChoix.indexOf(temp);
       while (idx != -1) {
         coupable.push(idx);

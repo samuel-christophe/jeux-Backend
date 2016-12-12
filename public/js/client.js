@@ -441,7 +441,7 @@
       console.log(data);
       if ( perso != 'fantom'){
         var div = document.createElement('div');
-        div.classList.add('div');
+        div.classList.add('div', 'zindex2');
         div.style.top = '565px';
         data.vision.forEach(function(cartes, index, array) {
           //créeation des éléments et ajout des cartes
