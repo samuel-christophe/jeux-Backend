@@ -10,8 +10,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    // var socket = io('http://192.168.1.30:8888/');
-    var socket = io('http://10.1.1.19:8888/');
+    var socket = io('http://192.168.1.30:8888/');
+    // var socket = io('http://10.1.1.19:8888/');
     // var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
@@ -198,10 +198,12 @@
         });
       } else {
         playerListe.forEach ( function (item, numJoueur, array) {
+          console.log(item);
           if (item && item.joue != 'fantom') {
             //supprime les cartes vision
             var divElement = document.getElementById(numJoueur).parentNode;
             for (var i = 0; i < divElement.children.length; i) {
+              console.log(divElement.children[i]);
               if ( !divElement.children[i].id ) {
                 divElement.removeChild(divElement.children[i]);
               } else {
@@ -437,6 +439,43 @@
     //dernier choix des joueurs
     socket.on('last choice', (data) => {
       console.log(data);
+      if ( perso != 'fantom'){
+        var div = document.createElement('div');
+        data.vision.forEach(function(carte, index, array) {
+          //créeation des éléments et ajout des cartes
+          var visionPetit = document.createElement('img');
+          var visionGrand = document.createElement('img');
+          var carte = document.createElement('div');
+
+          //ajout des src
+          visionPetit.src = 'image/spriteVisions.png';
+          visionGrand.src = 'image/carte vision/' + carte.src;
+
+          //ajout des class
+          visionPetit.classList.add('image', 'index1');
+          visionGrand.classList.add('image', 'start', 'grandeCarte');
+          carte.classList.add('div', 'couper', 'carte', 'index1');
+
+          //positionnement
+          visionPetit.style.left = carte.left;
+          visionPetit.style.top = carte.top;
+          carte.style.width = carte.width;
+          carte.style.height = carte.height;
+
+          //ajout dans le document
+          carte.appendChild(visionPetit);
+          div.appendChild(carte);
+          jeux.appendChild(visionGrand);
+
+          //ajout des événements
+          afficheImage(visionPetit, visionGrand);
+          afficheImage(visionGrand, visionGrand);
+        });
+        jeux.appendChild(div);
+        for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
+          contextmenu(getElementById(numJoueur), [14]);
+        }
+      }
       // visionLast ();
     });
 
@@ -1279,7 +1318,7 @@
       }
     };
 
-    //choix du coupable
+    //choix du coupable et envoie de la vision
     function sendVision(perso)
     {
       if ( choisCoupable.vision[0] && choisCoupable.vision[1] && choisCoupable.vision[2] ) {
@@ -1287,6 +1326,13 @@
       } else {
         addChat('Vous devez selectionner une carte vision pour le coupable, le lieux et l\'objet.', 20000);
       }
+    };
+
+    //choix du coupable
+    function sendVision(perso)
+    {
+      socket.emit('vote', {numPlayer: numPlayer, perso: perso.id, room: room});
+      addChat('Vous avez selectionner le coupable numéro: ' + perso.id, 20000);
     };
 
     //choix du coupable
@@ -1496,6 +1542,12 @@
             p.addEventListener('click', function () { sendVision(element, num); });
             p.setAttribute('class', 'ctxline');
             p.innerHTML = 'Envoyez la vision final.';
+          },function(){
+            var p = document.createElement('p');
+            d.appendChild(p);
+            p.addEventListener('click', function () { choisCoupable(element); });
+            p.setAttribute('class', 'ctxline');
+            p.innerHTML = 'Choisissez ce coupable.';
           }];
 
         for (var i = 0; i < arrayRightClic.length; i++) {

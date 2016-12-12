@@ -511,6 +511,40 @@ socketIOWebSocketServer.on('connection', (socket) => {
     }
   });
 
+  //vote des joueurs
+  socket.on('vote', function (data) {
+    var totalVote = 0;
+    var totalChoix = [];
+    var temp = 0;
+    var coupable = [];
+
+    //enregistre le vote
+    rooms[data.room].playerListe[data.numPlayer].choixCoupable = data.perso;
+    rooms[data.room].playerListe[data.numPlayer].forEach(function(item, index, array){
+      if (item && item.choixCoupable) {
+        totalVote++;
+        if (totalChoix[item.choixCoupable]) {
+          totalChoix[item.choixCoupable]++;
+        } else {
+          totalChoix[item.choixCoupable] = 1;
+        }
+      }
+    });
+    if ( totalVote = rooms[data.room].nbPlayer - 1 ) {
+      temp = Math.max(totalChois);
+      var idx = totalChoix.indexOf(temp);
+      while (idx != -1) {
+        coupable.push(idx);
+        idx = totalChoix.indexOf(temp, idx + 1);
+      }
+      if ( coupable.length = 1 ) {
+        socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'vote end', { vision: coupable, coupable: rooms[data.room].choisCoupable.coupable } );
+      } else {
+        //trouver qui à voté pour ce coupable
+      }
+    }
+  });
+
   //récupére le chois du fantom
   socket.on('final vision', function (data) {
     console.log(data);
@@ -519,7 +553,10 @@ socketIOWebSocketServer.on('connection', (socket) => {
       rooms[data.room].choisCoupable = {};
       rooms[data.room].choisCoupable.coupable = data.perso;
       //dispose aléatoirement les cartes choisies.
-      rooms[data.room].choisCoupable.vision = cartes.vision(data.vision);
+      data.vision.forEach(function (item, index, array) {
+        lastVision.push(rooms[data.room].listesCartes.cardVision[index]);
+      });
+      rooms[data.room].choisCoupable.vision = cartes.vision(lastVision);
       //parcour la liste des joueurs pour envoyer les cartes
       if (rooms[data.room].nbPlayer > 3) {
         for (var numJoueur = 1; numJoueur <= rooms[data.room].nbPlayer; numJoueur++) {
