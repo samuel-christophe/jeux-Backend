@@ -457,10 +457,10 @@
           carte.classList.add('div', 'couper', 'carte', 'index1');
 
           //positionnement
-          visionPetit.style.left = carte.left;
-          visionPetit.style.top = carte.top;
-          carte.style.width = carte.width;
-          carte.style.height = carte.height;
+          visionPetit.style.left = cartes.left;
+          visionPetit.style.top = cartes.top;
+          carte.style.width = cartes.width;
+          carte.style.height = cartes.height;
 
           //ajout dans le document
           carte.appendChild(visionPetit);
@@ -1327,6 +1327,7 @@
     function sendVision(perso)
     {
       if ( choisCoupable.vision[0] && choisCoupable.vision[1] && choisCoupable.vision[2] ) {
+        console.log(choisCoupable.vision);
         socket.emit('final vision', {numPlayer: numPlayer, perso: choisCoupable.perso, vision: choisCoupable.vision, room: room});
       } else {
         addChat('Vous devez selectionner une carte vision pour le coupable, le lieux et l\'objet.', 20000);
@@ -1352,18 +1353,21 @@
     //vision du personnage coupable
     function visionPerso(e, numVision)
     {
+      console.log(numVision);
       choisCoupable.vision[0] = numVision;
     };
 
     //vision du lieux du meutre
     function visionLieux(e, numVision)
     {
+      console.log(numVision);
       choisCoupable.vision[1] = numVision;
     };
 
     //vision de l'objet ayant servie à tué
     function visionObjet(e, numVision)
     {
+      console.log(numVision);
       choisCoupable.vision[2] = numVision;
     };
 
