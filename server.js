@@ -405,21 +405,21 @@ socketIOWebSocketServer.on('connection', (socket) => {
         for (var i = 1; i <= rooms[data.room].nbPlayer; i++) {
           if (rooms[data.room].playerListe[i].joue == 'fantom') {
             //envoie les cartes du fantome
-            cartes = {
+            card = {
               personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabFantom),
               cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabFantom),
               cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabFantom),
               vision: recupCartes(carteVisions, rooms[data.room].listesCartes.cardVision)
             };
             console.log(rooms[data.room].playerListe);
-            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes, tour: 1, corbeau: nbCorbeau[rooms[data.room].level], playerListe : rooms[data.room].playerListe, nbPlayer: rooms[data.room].nbPlayer});
+            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : card, tour: 1, corbeau: nbCorbeau[rooms[data.room].level], playerListe : rooms[data.room].playerListe, nbPlayer: rooms[data.room].nbPlayer});
           } else {
-            cartes = {
+            card = {
               personnages: recupCartes(cartesPersonnages, rooms[data.room].listesCartes.cartesPersonnages.tabVoyant),
               cartesLieux: recupCartes(cartesLieux, rooms[data.room].listesCartes.cartesLieux.tabVoyant),
               cartesObjet: recupCartes(cartesObjet, rooms[data.room].listesCartes.cartesObjet.tabVoyant)
             };
-            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : cartes, tour: 1, playerListe : rooms[data.room].playerListe, nbPlayer: rooms[data.room].nbPlayer});
+            socketIOWebSocketServer.in(rooms[data.room].playerListe[i].username).emit('cartes', {cartes : card, tour: 1, playerListe : rooms[data.room].playerListe, nbPlayer: rooms[data.room].nbPlayer});
           }
         }
         //enregistre les paramètre de la partie
