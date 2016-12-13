@@ -243,7 +243,7 @@
             document.getElementById(numJoueur).appendChild(playerInfo[numJoueur].intuition);
             //vérifie les votes
             for (var j = 0; playerInfo[numJoueur].intuition.children.length > 1 ; j++) {
-              playerInfo[numJoueur].intuition.removeChild(playerInfo[numJoueur].intuition.children[i]);
+              playerInfo[numJoueur].intuition.removeChild(playerInfo[numJoueur].intuition.children[j]);
             }
           }
         });
