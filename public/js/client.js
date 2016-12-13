@@ -173,6 +173,7 @@
 
     //reception des votes
     deconnection.addEventListener('vote envoye', (data) => {
+      console.log(data);
       //ajoute du jeton intuition
       var jeton = document.createElement('div');
       var div = document.createElement('div');
@@ -579,7 +580,7 @@
             if (playerListe[numJoueur].position < 4) {
               progression[numJoueur][playerListe[numJoueur].position].insertBefore(playerInfo[numJoueur].intuition, progression[numJoueur][playerListe[numJoueur].position].children[progression[numJoueur][playerListe[numJoueur].position].children.length - 1]);
             } else {
-              document.getElementById(progressionVoyant[playerListe[numJoueur].position] + numJoueur).appendChild(playerInfo[numJoueur].intuition);
+              document.getElementById(numJoueur).appendChild(playerInfo[numJoueur].intuition);
             }
           }
         }
