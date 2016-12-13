@@ -764,9 +764,12 @@
           }
         });
         console.log(playerInfo);
-        //vérifie si il s'agit de la fase des suspects
+        //vérifie si il s'agit de la phase des suspects
         if (suspect) {
-          //affiche les carte des voyant
+
+          textAffiche.style.top = '650px';
+          textAffiche.style.left = '850px';
+          //affiche les cartes des voyants
           div.classList.remove('couper');
           //ajout des points si 4 joueur ou plus
           if (nbPlayer > 3) {
