@@ -2,7 +2,7 @@
   //Au chargement du document
   window.addEventListener('DOMContentLoaded',() => {
 
-    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, perso2, nbPlayer, cartes, div, heure, positionVoyant, aiguille, aiguilleHeure, vision, tour, niveau, regles, suspect;
+    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, perso2, nbPlayer, cartes, div, heure, positionVoyant, aiguille, aiguilleHeure, vision, tour, niveau, regles, suspect, age;
     var playerListe = [];
     var playerInfo = [];
     /**
@@ -10,8 +10,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    var socket = io('http://192.168.1.30:8888/');
-    // var socket = io('http://10.1.1.19:8888/');
+    // var socket = io('http://192.168.1.30:8888/');
+    var socket = io('http://10.1.1.19:8888/');
     // var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
@@ -171,6 +171,30 @@
 
     });
 
+    //reception des votes
+    deconnection.addEventListener('vote envoye', (data) => {
+      //ajoute du jeton intuition
+      var jeton = document.createElement('div');
+      var div = document.createElement('div');
+      if (data.numPlayer != numPlayer) {
+        if (data.ok) {
+          jeton.classList.add('ok' + jetonPoint[playerListe[data.numPlayer].joue].couleur);
+          div.classList.add('intuition' + jetonPoint[playerListe[data.numPlayer].joue].couleur);
+          div.appendChild(jeton);
+          playerInfo[data.votePour].intuition.insertBefore(div, playerInfo[data.votePour].intuition.children[0]);
+        } else {
+          if (data.ok === false) {
+            jeton.classList.add('nok' + jetonPoint[playerListe[data.numPlayer].joue].couleur);
+            div.classList.add('intuition' + jetonPoint[playerListe[data.numPlayer].joue].couleur);
+            div.appendChild(jeton);
+            playerInfo[data.votePour].intuition.insertBefore(div, playerInfo[data.votePour].intuition.children[0]);
+          } else {
+            playerInfo[data.votePour].intuition.removeChild(playerInfo[data.votePour].intuition.children[0]);
+          }
+        }
+      }
+    });
+
     socket.on('remove player', (data) => {
       if (data.end) {
         addChat('la partie est terminée suite au départ de ' + data.username + '!', 120000);
@@ -199,7 +223,7 @@
       } else {
         playerListe.forEach ( function (item, numJoueur, array) {
           console.log(item);
-          if (item && item.joue != 'fantom') {
+          if (item && (item.joue != 'fantom') && (playerInfo[numJoueur].position < 4)) {
             //supprime les cartes vision
             var divElement = document.getElementById(numJoueur).parentNode;
             for (var i = 0; i < divElement.children.length; i) {
@@ -212,15 +236,13 @@
             }
 
             //ajoute la carte trouvé : carteDiv.id = nomObjet + numCartes; var idCartesSuspect = ['personnages', 'cartesLieux', 'cartesObjet'];
-            if (playerInfo[numJoueur].position) {
-              divElement.appendChild( document.getElementById( idCartesSuspect[ playerInfo[numJoueur].position ] + playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ] ) );
-              playerInfo[numJoueur].position = playerListe[numJoueur].position;
-              //déplace le pion intuition
-              document.getElementById(numJoueur).appendChild(playerInfo[numJoueur].intuition);
-              //vérifie les votes
-              for (var j = 0; playerInfo[numJoueur].intuition.children.length > 1 ; j++) {
-                playerInfo[numJoueur].intuition.removeChild(playerInfo[numJoueur].intuition.children[i]);
-              }
+            divElement.appendChild( document.getElementById( idCartesSuspect[ playerInfo[numJoueur].position ] + playerListe[numJoueur].indiceCarte ) );
+            playerInfo[numJoueur].position = playerListe[numJoueur].position;
+            //déplace le pion intuition
+            document.getElementById(numJoueur).appendChild(playerInfo[numJoueur].intuition);
+            //vérifie les votes
+            for (var j = 0; playerInfo[numJoueur].intuition.children.length > 1 ; j++) {
+              playerInfo[numJoueur].intuition.removeChild(playerInfo[numJoueur].intuition.children[i]);
             }
           }
         });
@@ -240,15 +262,19 @@
       Au clic de souris sur l'élément HTML considéré
       on envoi un message à travers la connexion WebSocket.
       **/
-      if (message.value) {
-        if (perso != 'fantom' || perso == undefined) {
-          socket.emit('chat', { room: room, username: username, texte: message.value });
-          addChat(username + ' a dit: ' + message.value, 10000);
-        } else {
-          addChat('en tant que fantome vous ne pouvez plus parler.', 20000);
-        }
+      if (age) {
+        socket.emit('age', { room: room, username: username, age: message.value });
       } else {
-        pseudo.placeholder = 'Veuillez saisir au minumum un caractère';
+        if (message.value) {
+          if (perso != 'fantom' || perso == undefined) {
+            socket.emit('chat', { room: room, username: username, texte: message.value });
+            addChat(username + ' a dit: ' + message.value, 10000);
+          } else {
+            addChat('en tant que fantome vous ne pouvez plus parler.', 20000);
+          }
+        } else {
+          pseudo.placeholder = 'Veuillez saisir au minumum un caractère';
+        }
       }
     });
 
@@ -413,16 +439,7 @@
     //selection de la difficulté
     socket.on('levelSelect', (data) => {
       if (username != data.username) {
-        console.log(data.level);
-        console.log(niveau[data.level - 1]);
-        console.log(data.username + ' a selectionné la difficulté : ' + niveau[data.level - 1]);
         addChat(data.username + ' a selectionné la difficulté : ' + niveau[data.level - 1], 20000);
-      }
-      //début de la partie
-      if (data.start){
-        tour = data.tour;
-        corbeau = data.corbeau;
-        // debutPartie ();
       }
     });
 
@@ -437,12 +454,17 @@
     });
 
     //fin d'un tour
+    socket.on('demande age', (data) => {
+      addChat(data.message, 600000);
+      age = true;
+    });
+
+    //fin d'un tour
     socket.on('vote end', (data) => {
       if (data.gagner) {
-
         addChat('vous avez trouvé le coupable ' + data.coupable + ' avec: ' + data.nbVote + ' nombre de voie');
       } else {
-        addChat('vous n\'avez pas trouvé le coupable avec: ' + data.nbVote + ' nombre de voie pour ' + data.coupable + '. le bon coupable été le suspect numéro: ' + data.vision );
+        addChat('vous n\'avez pas trouvé le coupable avec: ' + data.nbVote + ' voie pour ' + data.coupable + '. le bon coupable été le suspect numéro: ' + data.vision );
       }
     });
 
@@ -451,8 +473,9 @@
       console.log(data);
       if ( perso != 'fantom'){
         var div = document.createElement('div');
-        div.classList.add('div', 'zindex2');
-        div.style.top = '565px';
+        div.classList.add('image', 'zindex2');
+        div.style.top = '842px';
+        div.style.left = '100px';
         data.vision.forEach(function(cartes, index, array) {
           //créeation des éléments et ajout des cartes
           var visionPetit = document.createElement('img');
@@ -520,7 +543,7 @@
     };
 
     //fonction ajouter message
-    var addChat = (mes, times) => {
+    var addChat = (mes, times, boul) => {
       // create a new div element
       // and give it some content
       var p = document.createElement('p');
@@ -654,7 +677,7 @@
 
       //si le joueur joue le fantom
       if (perso == 'fantom') {
-        navigation.style.top = '722px';
+        navigation.style.top = '956px';
         position.classList.remove('position');
         position.classList.add('div');
         position.appendChild(heure);
@@ -721,7 +744,7 @@
         navigation.style.top = 0;
         navigation.style.left = 0;
         textAffiche.classList.add('div');
-        textAffiche.style.top = '40px';
+        textAffiche.style.top = '50px';
         navigation.classList.add('div');
         textAffiche.classList.remove('textAffiche');
         div.classList.remove('avatar');
@@ -1106,6 +1129,9 @@
       carteDiv.style.width = playerListe[numJoueur].find[nomObjet][0].width;
       carteDiv.style.height = playerListe[numJoueur].find[nomObjet][0].height;
 
+      //id
+      carteDiv.id = nomObjet + numJoueur;
+
       //ajout dans le document
       carteDiv.appendChild(cartePetit);
       elementParent.appendChild(carteDiv);
@@ -1338,22 +1364,26 @@
     //choix du coupable et envoie de la vision
     function sendVision(perso)
     {
+      console.log(choisCoupable.vision);
       if ( choisCoupable.vision[0] && choisCoupable.vision[1] && choisCoupable.vision[2] ) {
-        console.log(choisCoupable.vision);
-        socket.emit('final vision', {numPlayer: numPlayer, perso: choisCoupable.perso, vision: choisCoupable.vision, room: room});
+        if ( (choisCoupable.vision[0] != choisCoupable.vision[1]) && (choisCoupable.vision[0] != choisCoupable.vision[2]) && (choisCoupable.vision[1] != choisCoupable.vision[2]) ) {
+          socket.emit('final vision', {numPlayer: numPlayer, perso: choisCoupable.perso, vision: choisCoupable.vision, room: room});
+        } else {
+          addChat('Vous devez selectionner des cartes vision différentes.', 20000);
+        }
       } else {
         addChat('Vous devez selectionner une carte vision pour le coupable, le lieux et l\'objet.', 20000);
       }
     };
 
-    //choix du coupable
+    //choix du coupable par les voyants
     function choixCoupable(perso)
     {
       socket.emit('vote joueur', {numPlayer: numPlayer, perso: perso.id, room: room});
       addChat('Vous avez selectionner le coupable numéro: ' + perso.id, 20000);
     };
 
-    //choix du coupable
+    //choix du coupable par le fantom
     function coupable(perso)
     {
       choisCoupable.perso = perso.id;
@@ -1366,6 +1396,7 @@
     function visionPerso(e, numVision)
     {
       console.log(numVision);
+      console.log(choisCoupable.vision);
       choisCoupable.vision[0] = numVision;
     };
 
@@ -1373,6 +1404,7 @@
     function visionLieux(e, numVision)
     {
       console.log(numVision);
+      console.log(choisCoupable.vision);
       choisCoupable.vision[1] = numVision;
     };
 
@@ -1380,6 +1412,7 @@
     function visionObjet(e, numVision)
     {
       console.log(numVision);
+      console.log(choisCoupable.vision);
       choisCoupable.vision[2] = numVision;
     };
 

@@ -306,16 +306,6 @@ socketIOWebSocketServer.on('connection', (socket) => {
           console.log(err);
         }
       });
-      //mise à jour du nombre de joueur
-      for (var i = 1; i <= (rooms[data.room].nbPlayer + 1); i++) {
-        if (i != data.numPlayer) {
-          users.updateOne({username : rooms[data.room].playerListe[i].username}, { $set: {nbPlayer: rooms[data.room].nbPlayer} }, function(err, result) {
-            if (err) {
-              console.log(err);
-            }
-          });
-        }
-      }
     }
   });
 
@@ -476,7 +466,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
           rooms[data.room].playerListe[data.numPlayer].nbJetonNOK--;
         }
       } else {
-        //rajoute ses jeton de vote
+        //rajoute ses jetons de vote
         if (rooms[data.room].playerListe[data.votePour].vote[data.numPlayer]) {
           rooms[data.room].playerListe[data.numPlayer].nbJetonOK++;
         } else {
@@ -494,7 +484,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
     partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe } }, function(err,result){});
 
     // Envoi d'un message au client WebSocket.
-    socketIOWebSocketServer.in(data.room).emit('voteEnvoye', data);
+    socketIOWebSocketServer.in(data.room).emit('vote envoye', data);
   });
 
   //affiche la position du joueur
@@ -503,6 +493,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
     //verifie que la carte est toujours présente
     if ( rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[data.numPlayer].position]].tabVoyant[data.numCartes] != undefined ) {
       rooms[data.room].playerListe[data.numPlayer].positionCartes = rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[data.numPlayer].position]].tabVoyant[data.numCartes];
+      rooms[data.room].playerListe[data.numPlayer].indiceCarte = data.numCartes;
       // Envoi d'un message au client WebSocket.
       socketIOWebSocketServer.in(data.room).emit('positionVoyant', data);
       //enregistre le chois du joueur
@@ -511,40 +502,156 @@ socketIOWebSocketServer.on('connection', (socket) => {
     }
   });
 
+  //enregistre l'age des joueurs execo
+  socket.on('age', function (data) {
+    var totalAge = 0;
+    var age = parseFloat(data.age);
+    var older = 0;
+    var coupable;
+    //vérifie qu'un nombre à bien été rentré
+    if ( !isNAN( age ) && (age > 8) && (age < 100) ) {
+      rooms[data.room].playerListe[data.numPlayer].age = data.age;
+      rooms[data.room].execo.forEach(function(item, index, array){
+        if (rooms[data.room].playerListe[item].age) {
+          totalAge++;
+          if (rooms[data.room].playerListe[item].age > older) {
+            older = rooms[data.room].playerListe[item].age;
+            coupable = rooms[data.room].playerListe[item].choixCoupable;
+          }
+        }
+      });
+      if ( totalAge == rooms[data.room].execo.length ) {
+        //vérifie si la majorité à trouvé le coupable
+        if (coupable == rooms[data.room].choisCoupable.coupable) {
+          gagner = true;
+        } else {
+          gagner = false;
+        }
+        //envoie le résultat de la partie
+        socketIOWebSocketServer.in(data.room).emit( 'vote end', { vision: coupable, coupable: rooms[data.room].choisCoupable.coupable, nbVote : temp, gagner : gagner } );
+        //enregistre la fin de partie
+        var partie = db.get().collection('partie');
+        partie.updateOne({room:data.room}, { $set: { ganer: gagner } }, function(err,result){});
+        //supprime les joueurs
+        var users = db.get().collection('users');
+        rooms[data.room].playerListe.forEach ( function(item, index, array) {
+          users.deleteOne({username : item.username}, function(err, result) {
+            if (err) {
+              console.log(err);
+            }
+          });
+        });
+      }
+    }
+  });
+
   //vote des joueurs
   socket.on('vote joueur', function (data) {
     var totalVote = 0;
-    var totalChoix = [];
+    var totalChoix = [0,0,0,0,0,0,0,0];
     var temp = 0;
     var coupable = [];
+    var execo = [];
+    var suspect = [];
+    var nbPoint, gagner;
+    var indice = 1;
 
     //enregistre le vote
     rooms[data.room].playerListe[data.numPlayer].choixCoupable = data.perso;
     rooms[data.room].playerListe.forEach(function(item, index, array){
       if (item && item.choixCoupable) {
         totalVote++;
-        if (totalChoix[item.choixCoupable]) {
-          totalChoix[item.choixCoupable]++;
-        } else {
-          totalChoix[item.choixCoupable] = 1;
-        }
+        totalChoix[item.choixCoupable]++;
       }
     });
     if ( totalVote == rooms[data.room].nbPlayer - 1 ) {
-      temp = Math.max(totalChoix);
+      temp = Math.max.apply(null, totalChoix);
+      console.log(temp);
       var idx = totalChoix.indexOf(temp);
+      //enregistre les votes execo
       while (idx != -1) {
         coupable.push(idx);
         idx = totalChoix.indexOf(temp, idx + 1);
       }
+      console.log(coupable);
       if ( coupable.length == 1 ) {
+        //si il n'y a pas d'execo vérifie si la majorité à trouvé le coupable
         if (coupable == rooms[data.room].choisCoupable.coupable) {
-          socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'vote end', { vision: coupable, coupable: rooms[data.room].choisCoupable.coupable, nbVote : temp, gagner : true } );
+          gagner = true;
         } else {
-          socketIOWebSocketServer.in(rooms[data.room].playerListe[numJoueur].username).emit( 'vote end', { vision: coupable, coupable: rooms[data.room].choisCoupable.coupable, nbVote : temp, gagner : false } );
+          gagner = false;
         }
+        //envoie le résultat de la partie
+        socketIOWebSocketServer.in(data.room).emit( 'vote end', { vision: coupable, coupable: rooms[data.room].choisCoupable.coupable, nbVote : temp, gagner : gagner } );
+        //enregistre la fin de partie
+        var partie = db.get().collection('partie');
+        partie.updateOne({room:data.room}, { $set: { ganer: gagner } }, function(err,result){});
+        //supprime les joueurs
+        var users = db.get().collection('users');
+        rooms[data.room].playerListe.forEach ( function(item, index, array) {
+          if (item) {
+            users.deleteOne({username : item.username}, function(err, result) {
+              if (err) {
+                console.log(err);
+              }
+            });
+          }
+        });
       } else {
-        //trouver qui à voté pour ce coupable
+        //trouver qui à voté pour ces suspects et comparer leurs points
+        rooms[data.room].playerListe.forEach(function(item, index, array){
+          if (item && item.choixCoupable && coupable.includes(item.choixCoupable) ) {
+            console.log(coupable);
+            console.log(item.choixCoupable);
+            //le nombre de point est supérieur
+            if ( item.nbPoint > nbPoint ) {
+              //réinitialise les tableau
+              if (indice > 0) {
+                execo = [];
+                suspect = [];
+                indice = 0;
+              }
+              nbPoint = item.nbPoint;
+              suspect[indice] = item.choixCoupable;
+              execo[indice] = index;
+            } else {
+              //Le même nombre de point
+              if (item.nbPoint == nbPoint) {
+                execo.push(index);
+                suspect.push(item.choixCoupable);
+                indice++;
+              }
+            }
+          }
+        });
+        if (indice > 0) {
+          rooms[data.room].execo = execo;
+          //envoie une demande d'age au joueur concerné.
+          execo.forEach(function(item, index, array) {
+            socketIOWebSocketServer.in(rooms[data.room].playerListe[item].username).emit( 'demande age', {message: 'veuillez sésire votre âge.'} );
+          });
+        } else {
+          //si il n'y a pas d'execo vérifie si la majorité à trouvé le coupable
+          if (suspect[0] == rooms[data.room].choisCoupable.coupable) {
+            gagner = true;
+          } else {
+            gagner = false;
+          }
+          socketIOWebSocketServer.in(data.room).emit( 'vote end', { vision: coupable, coupable: rooms[data.room].choisCoupable.coupable, nbVote : temp, gagner : gagner } );
+          //enregistre la fin de partie
+          var partie = db.get().collection('partie');
+          partie.updateOne({room:data.room}, { $set: { ganer: gagner } }, function(err,result){});
+
+          //supprime les joueurs
+          var users = db.get().collection('users');
+          rooms[data.room].playerListe.forEach ( function(item, index, array) {
+            users.deleteOne({username : item.username}, function(err, result) {
+              if (err) {
+                console.log(err);
+              }
+            });
+          });
+        }
       }
     }
   });
@@ -610,7 +717,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
       } else {
         socketIOWebSocketServer.in(data.room).emit('last choice', rooms[data.room].choisCoupable);
       }
-      //enregistre le chois du joueur
+      //enregistre le choix du joueur
       var partie = db.get().collection('partie');
       partie.updateOne({room:data.room}, { $set: { choisCoupable: rooms[data.room].choisCoupable } }, function(err,result){});
     }
@@ -772,9 +879,16 @@ socketIOWebSocketServer.on('connection', (socket) => {
           if ( (nbPlayerEnd + 1) == rooms[data.room].nbPlayer ) {
             rooms[data.room].suspect = true;
             // Envoi d'un message au client WebSocket.
-            socketIOWebSocketServer.in(data.room).emit('confrontation suspects', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
+            socketIOWebSocketServer.in(data.room).emit('confrontation suspects', {
+              playerListe : rooms[data.room].playerListe,
+              tour: rooms[data.room].tour
+            });
             //enregistre les modifications
-            partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour, suspect: rooms[data.room].suspect, corbeauUse: rooms[data.room].corbeauUse } }, function(err,result){});
+            partie.updateOne({room:data.room}, { $set: {
+              playerListe : rooms[data.room].playerListe,
+              tour: rooms[data.room].tour,
+              suspect: rooms[data.room].suspect,
+              corbeauUse: rooms[data.room].corbeauUse } }, function(err,result){});
           } else {
             //vérifie si il s'agit du 8ème tour
             if (rooms[data.room].tour == 8) {
@@ -795,7 +909,11 @@ socketIOWebSocketServer.on('connection', (socket) => {
               // Envoi d'un message au client WebSocket.
               socketIOWebSocketServer.in(data.room).emit('end turn', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
               //enregistre les modifications
-              partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour, corbeauUse: rooms[data.room].corbeauUse, listesCartes: rooms[data.room].listesCartes } }, function(err,result){});
+              partie.updateOne({room:data.room}, { $set: {
+                playerListe : rooms[data.room].playerListe,
+                tour: rooms[data.room].tour,
+                corbeauUse: rooms[data.room].corbeauUse,
+                listesCartes: rooms[data.room].listesCartes } }, function(err,result){});
             }
           }
           rooms[data.room].endTour = undefined;

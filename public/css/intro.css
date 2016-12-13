@@ -33,7 +33,7 @@ ul li:nth-of-type(2n+1), li a{
   display: block ;
   background: blue ;
   color: #fff ;
-  font: 1em "Trebuchet MS",Arial,sans-serif ;
+  font: 1.5em "Trebuchet MS",Arial,sans-serif ;
   line-height: 1em ;
   padding: 4px 0 ;
   text-align: center ;
@@ -48,6 +48,7 @@ ul li:nth-of-type(2n+1), li a{
 }
 #deconnection{
   width: 100%;
+  left: 20px;
 }
 label, input, #chat p{
   float: left ;
@@ -58,10 +59,12 @@ label, input, #chat p{
   background: blue ;
   text-align: center ;
   text-decoration: none ;
+  font-size: 1.5em;
 }
 input:nth-of-type(odd), #chat p{
   background-color: white ;
   color: blue ;
+  font-size: 1.5em;
 }
 .text{
   width: 260px;
@@ -127,7 +130,7 @@ img.characterSix{
 .textAffiche{
   position: absolute;
   z-index: 1;
-  top: 900px;
+  top: 998px;
   left: 60%;
   margin-left: 3px;
   margin-top: 3px;
