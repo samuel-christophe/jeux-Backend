@@ -172,7 +172,7 @@
     });
 
     //reception des votes
-    deconnection.addEventListener('vote envoye', (data) => {
+    socket.on('vote envoye', (data) => {
       console.log(data);
       //ajoute du jeton intuition
       var jeton = document.createElement('div');
@@ -463,9 +463,9 @@
     //fin d'un tour
     socket.on('vote end', (data) => {
       if (data.gagner) {
-        addChat('vous avez trouvé le coupable ' + data.coupable + ' avec: ' + data.nbVote + ' nombre de voie');
+        addChat('vous avez trouvé le coupable ' + data.coupable + ' avec: ' + data.nbVote + ' nombre de voie', 3600000);
       } else {
-        addChat('vous n\'avez pas trouvé le coupable avec: ' + data.nbVote + ' voie pour ' + data.coupable + '. le bon coupable été le suspect numéro: ' + data.vision );
+        addChat('vous n\'avez pas trouvé le coupable avec: ' + data.nbVote + ' voie pour ' + data.coupable + '. le bon coupable été le suspect numéro: ' + data.vision , 3600000);
       }
     });
 
@@ -565,6 +565,7 @@
     };
 
     function endTurn() {
+      console.log(tour);
       //suppression des class
       aiguilleHeure.classList.remove(heureTour[tour - 1].div);
       aiguille.classList.remove(heureTour[tour - 1].img);
@@ -606,10 +607,6 @@
                   i++;
                 }
               }
-              //ajoute la carte trouvé : carteDiv.id = nomObjet + numCartes; var idCartesSuspect = ['personnages', 'cartesLieux', 'cartesObjet'];
-              console.log(idCartesSuspect[ playerInfo[numJoueur].position ]);
-              console.log(playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ]);
-              console.log(document.getElementById( idCartesSuspect[ playerInfo[numJoueur].position ] + playerListe[numJoueur].find[ positionPlateau[ playerInfo[numJoueur].position ] ] ));
               //ajoute la carte trouvé : carteDiv.id = nomObjet + numCartes; var idCartesSuspect = ['personnages', 'cartesLieux', 'cartesObjet'];
               divElement.appendChild( document.getElementById( idCartesSuspect[ playerInfo[numJoueur].position ] + playerListe[numJoueur].indiceCarte ) );
               playerInfo[numJoueur].position = playerListe[numJoueur].position;
@@ -655,7 +652,7 @@
 
       //ajout des class
       heure.classList.add('image', 'heure', 'couper');
-      if (tour = 8) {
+      if (tour == 8) {
         tour = 7;
       }
       aiguilleHeure.classList.add('image', 'couper', heureTour[tour].div);
