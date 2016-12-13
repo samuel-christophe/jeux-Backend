@@ -463,9 +463,9 @@
     //fin d'un tour
     socket.on('vote end', (data) => {
       if (data.gagner) {
-        addChat('vous avez trouvé le coupable ' + data.coupable + ' avec: ' + data.nbVote + ' nombre de voie', 3600000);
+        addChat('vous avez trouvé le coupable ' + data.coupable + ' avec: ' + data.nbVote + ' voix', 3600000);
       } else {
-        addChat('vous n\'avez pas trouvé le coupable avec: ' + data.nbVote + ' voie pour ' + data.coupable + '. le bon coupable été le suspect numéro: ' + data.vision , 3600000);
+        addChat('vous n\'avez pas trouvé le coupable avec: ' + data.nbVote + ' voix pour ' + data.coupable + '. le bon coupable été le suspect numéro: ' + data.vision , 3600000);
       }
     });
 

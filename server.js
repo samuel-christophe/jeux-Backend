@@ -904,7 +904,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
                 });
               }
               socket.leave(data.room);
-              socketIOWebSocketServer.in(data.room).emit('end game', { message : 'Vous n\'avez pas trouvé tous les suspects dans le temps.' });
+              socketIOWebSocketServer.in(data.room).emit('end game', { message : 'Vous n\'avez pas trouvé tous les suspects dans le temps imparti.' });
             } else {
               // Envoi d'un message au client WebSocket.
               socketIOWebSocketServer.in(data.room).emit('end turn', { playerListe : rooms[data.room].playerListe, tour: rooms[data.room].tour });
