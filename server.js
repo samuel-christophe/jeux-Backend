@@ -1059,7 +1059,7 @@ db.connect(url, function(err) {
       };
     });
     //affiche les partie fini
-    partie.find({"end":{$gagner:true}}, {_id: 0}).toArray(function(err, data) {
+    partie.find({"gagner":{$exists:true}}, {_id: 0}).toArray(function(err, data) {
       for (var i = 0; i < data.length; i++) {
         console.log(data[i]);
       };
