@@ -2,7 +2,7 @@
   //Au chargement du document
   window.addEventListener('DOMContentLoaded',() => {
 
-    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, perso2, nbPlayer, cartes, div, heure, positionVoyant, aiguille, aiguilleHeure, vision, tour, niveau, regles, suspect, age;
+    var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, perso2, nbPlayer, cartes, div, heure, positionVoyant, aiguille, aiguilleHeure, vision, tour, niveau, regles, suspect, age, plateau, nbJeton;
     var playerListe = [];
     var playerInfo = [];
     var positionJeton = {};
@@ -11,8 +11,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    // var socket = io('http://192.168.1.30:8888/');
-    var socket = io('http://10.1.1.137:8888/');
+    var socket = io('http://192.168.1.30:8888/');
+    // var socket = io('http://10.1.1.137:8888/');
     // var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
@@ -617,11 +617,17 @@
               //ajoute la carte trouvé : carteDiv.id = nomObjet + numCartes; var idCartesSuspect = ['personnages', 'cartesLieux', 'cartesObjet'];
               divElement.appendChild( document.getElementById( idCartesSuspect[ playerInfo[numJoueur].position ] + playerListe[numJoueur].indiceCarte ) );
               playerInfo[numJoueur].position = playerListe[numJoueur].position;
-
             }
             //vérifie les votes
-            for (let i = 0; playerInfo[numJoueur].intuition.children.length > 1 ; i++) {
-              playerInfo[numJoueur].intuition.removeChild(playerInfo[numJoueur].intuition.children[i]);
+            if (playerListe[numJoueur].nbJetonOK) {
+              for (let i = (nbJeton - 1); playerListe[numJoueur].nbJetonOK <= i ; i--) {
+                plateau.appendChild(playerInfo[numPlayer]['jetonok'][ i ]);
+              }
+            }
+            if (playerListe[numJoueur].nbJetonNOK) {
+              for (let i = (nbJeton - 1); playerListe[numJoueur].nbJetonNOK <= i ; i--) {
+                plateau.appendChild(playerInfo[numPlayer]['jetonnok'][ i ]);
+              }
             }
             //déplace le pion intuition
             if (playerListe[numJoueur].position < 4) {
@@ -828,6 +834,7 @@
           var objetDiv = document.createElement('div');
           var objetImage = document.createElement('img');
           var objet1 = document.createElement('div');
+          plateau = document.createElement('div');
 
           positionVoyant.classList.add('position');
           personnage.classList.add('div', 'centre');
@@ -844,6 +851,7 @@
           objetDiv.classList.add('image', 'positionJoueur', 'couper');
           objetImage.classList.add('image', 'objet');
           objet1.classList.add('div', 'index2');
+          plateau.classList.add('plateauIntuition');
 
           lieux2.style.width = '385px';
 
@@ -865,6 +873,7 @@
           positionVoyant.appendChild(lieux2);
           positionVoyant.appendChild(objet);
           positionVoyant.appendChild(objet1);
+          positionVoyant.appendChild(plateau);
 
           progression[1] = personnage;
           progression[2] = lieux;
@@ -901,7 +910,7 @@
             var point = document.createElement('div');
             var pointInt = document.createElement('div');
             var point6 = document.createElement('img');
-            var nbJeton = 3;
+            nbJeton = 3;
 
             point.classList.add('div', 'point', 'index2');
             pointInt.classList.add('image', 'pointInt', 'index2');
@@ -924,9 +933,17 @@
               positionJeton[numJoueur] = document.createElement('div');
               if (joueur && (joueur.joue != 'fantom') ) {
                 createPoint(numJoueur, point);
-                for (var i = 0; i < nbJeton; i++) {
-                  jetonIntuition(numJoueur, 'ok', joueur.joue, positionJeton[numJoueur]);
-                  jetonIntuition(numJoueur, 'nok', joueur.joue, positionJeton[numJoueur]);
+                for (var i = 0; i < joueur.nbJetonOK; i++) {
+                  if (joueur.nbJetonOK > i) {
+                    jetonIntuition(numJoueur, 'ok', joueur.joue, positionJeton[numJoueur]);
+                  } else {
+                    jetonIntuition(numJoueur, 'ok', joueur.joue, plateau);
+                  }
+                  if (joueur.nbJetonNOK > i) {
+                    jetonIntuition(numJoueur, 'nok', joueur.joue, positionJeton[numJoueur]);
+                  } else {
+                    jetonIntuition(numJoueur, 'nok', joueur.joue, plateau);
+                  }
                 }
                 positionJeton[numJoueur].classList.add('image');
                 positionJeton[numJoueur].style.top = '-20px';

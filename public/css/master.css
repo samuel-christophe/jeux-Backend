@@ -70,7 +70,6 @@ table {
 .point{
   height: 725px;
   width: 427px;
-  left: 1500px;
 }
 .padding{
   padding: 12px;
@@ -550,4 +549,12 @@ table {
   position: relative;
   float: left;
   margin: 3px;
+}
+.plateauIntuition{
+  background: url('../image/plateau.png') no-repeat 0 30px;
+  width: 21px;
+  height: 30px;
+  position: relative;
+  float: left;
+  z-index: 3;
 }
