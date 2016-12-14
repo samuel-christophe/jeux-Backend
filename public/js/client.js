@@ -5,13 +5,14 @@
     var room, username, numPlayer, facileLI, moyenLI, difficileLI, perso, perso2, nbPlayer, cartes, div, heure, positionVoyant, aiguille, aiguilleHeure, vision, tour, niveau, regles, suspect, age;
     var playerListe = [];
     var playerInfo = [];
+    var positionJeton = {};
     /**
       Établissement d'une nouvelle connexion WebSocket vers le serveur
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    var socket = io('http://192.168.1.30:8888/');
-    // var socket = io('http://10.1.1.19:8888/');
+    // var socket = io('http://192.168.1.30:8888/');
+    var socket = io('http://10.1.1.137:8888/');
     // var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
@@ -149,6 +150,7 @@
           A chaque clic de souris sur l'élément HTML considéré
           on envoi un message à travers la connexion WebSocket.
           **/
+          console.log(status);
           socket.emit('unJoueur', { room: room, username: username, perso: status, choisPerso : true, numPlayer : numPlayer });
           /**
           On déclare un évènement personnalisé 'unJoueur' dont
@@ -174,23 +176,28 @@
     //reception des votes
     socket.on('vote envoye', (data) => {
       console.log(data);
-      //ajoute du jeton intuition
-      var jeton = document.createElement('div');
-      var div = document.createElement('div');
-      if (data.numPlayer != numPlayer) {
-        if (data.ok) {
-          jeton.classList.add('ok' + jetonPoint[playerListe[data.numPlayer].joue].couleur);
-          div.classList.add('intuition' + jetonPoint[playerListe[data.numPlayer].joue].couleur);
-          div.appendChild(jeton);
-          playerInfo[data.votePour].intuition.insertBefore(div, playerInfo[data.votePour].intuition.children[0]);
-        } else {
-          if (data.ok === false) {
-            jeton.classList.add('nok' + jetonPoint[playerListe[data.numPlayer].joue].couleur);
-            div.classList.add('intuition' + jetonPoint[playerListe[data.numPlayer].joue].couleur);
-            div.appendChild(jeton);
-            playerInfo[data.votePour].intuition.insertBefore(div, playerInfo[data.votePour].intuition.children[0]);
+      playerListe = data.playerListe;
+      if (perso != 'fantom') {
+        //ajoute du jeton intuition
+        if (data.numPlayer != numPlayer) {
+          if (data.ok) {
+            playerInfo[data.votePour].intuition.insertBefore(playerInfo[data.numPlayer]['jetonok'][data.indice] , playerInfo[data.votePour].intuition.children[0]);
+            playerInfo[numPlayer]['jetonnok'][ data.indice ].classList.remove('intuition');
           } else {
-            playerInfo[data.votePour].intuition.removeChild(playerInfo[data.votePour].intuition.children[0]);
+            if (data.ok === false) {
+              playerInfo[data.votePour].intuition.insertBefore(playerInfo[data.numPlayer]['jetonnok'][data.indice], playerInfo[data.votePour].intuition.children[0]);
+              playerInfo[numPlayer]['jetonnok'][ data.indice ].classList.remove('intuition');
+            } else {
+              console.log(playerInfo[data.numPlayer]);
+              console.log(playerInfo[data.numPlayer]['jetonok']);
+              console.log(data.indice);
+              if (playerInfo[data.numPlayer]['jetonok'][data.indice].parentNode == playerInfo[data.votePour].intuition ) {
+                playerInfo[data.votePour].intuition.removeChild(playerInfo[data.numPlayer]['jetonok'][data.indice]);
+              } else {
+                playerInfo[data.votePour].intuition.removeChild(playerInfo[data.numPlayer]['jetonnok'][data.indice]);
+              }
+              playerInfo[numPlayer]['jetonnok'][ data.indice ].classList.add('intuition');
+            }
           }
         }
       }
@@ -222,6 +229,8 @@
           contextmenu(item.jeton, [9, 13]);
         });
       } else {
+        textAffiche.style.top = '650px';
+        textAffiche.style.left = '850px';
         playerListe.forEach ( function (item, numJoueur, array) {
           console.log(item);
           if (item && (item.joue != 'fantom') && (playerInfo[numJoueur].position < 4)) {
@@ -595,12 +604,10 @@
             playerInfo[numJoueur].nbPoint = ('nbPoint' + playerListe[numJoueur].nbPoint);
 
             //met à jour les cartes trouvé
-            console.log('ancienne position: ' + playerInfo[numJoueur].position);
-            console.log('nouvel position: ' + playerListe[numJoueur].position);
             if ( playerListe[numJoueur].position > playerInfo[numJoueur].position ) {
               //supprime les cartes vision
               var divElement = document.getElementById(numJoueur).parentNode;
-              for (var i = 0; i < divElement.children.length; i) {
+              for (let i = 0; i < divElement.children.length; i) {
                 if ( !divElement.children[i].id ) {
                   divElement.removeChild(divElement.children[i]);
                 } else {
@@ -612,15 +619,15 @@
               playerInfo[numJoueur].position = playerListe[numJoueur].position;
 
             }
+            //vérifie les votes
+            for (let i = 0; playerInfo[numJoueur].intuition.children.length > 1 ; i++) {
+              playerInfo[numJoueur].intuition.removeChild(playerInfo[numJoueur].intuition.children[i]);
+            }
             //déplace le pion intuition
             if (playerListe[numJoueur].position < 4) {
               progression[playerListe[numJoueur].position].insertBefore(playerInfo[numJoueur].intuition, progression[playerListe[numJoueur].position].children[progression[playerListe[numJoueur].position].children.length - 1]);
             } else {
               document.getElementById(numJoueur).appendChild(playerInfo[numJoueur].intuition);
-            }
-            //vérifie les votes
-            for (var i = 0; playerInfo[numJoueur].intuition.children.length > 1 ; i++) {
-              playerInfo[numJoueur].intuition.removeChild(playerInfo[numJoueur].intuition.children[i]);
             }
           }
         }
@@ -736,6 +743,7 @@
         }
         jeux.insertBefore(div, navigation);
       } else {
+
         //mise en place des voyants
         navigation.style.position = 'relative';
         navigation.style.float = 'left';
@@ -751,16 +759,14 @@
         //affichage des voyant
         playerListe.forEach (function(item, index, array) {
           if (item && item.joue != 'fantom') {
-            console.log(item);
             if (!playerInfo[index]) {
               playerInfo[index] = {};
             }
             playerInfo[index].position = parseInt(item.position);
-            console.log(playerInfo[index].position);
             avatarVoyant(div, index, (item.joue - 1));
           }
         });
-        console.log(playerInfo);
+
         //vérifie si il s'agit de la phase des suspects
         if (suspect) {
 
@@ -789,7 +795,7 @@
             }
             point.appendChild(pointInt);
             //parcour la liste des joueurs pour afficher leur points
-            for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
+            for (let numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
               if (playerListe[numJoueur].joue != 'fantom') {
                 createPoint(numJoueur, point);
               }
@@ -797,7 +803,7 @@
           }
           jeux.appendChild(div);
           //place les pions intuition
-          for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
+          for (let numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
             if (playerListe[numJoueur].joue != 'fantom') {
               pionsIntuition(numJoueur);
             }
@@ -889,34 +895,45 @@
           lieux2.appendChild(deconnection);
           lieux2.appendChild(navigation);
           lieux2.appendChild(textAffiche);
-          //ajout des points si 4 joueur ou plus
+          jeux.appendChild(div);
+          //ajout des points si 4 joueurs ou plus
           if (nbPlayer > 3) {
             var point = document.createElement('div');
             var pointInt = document.createElement('div');
             var point6 = document.createElement('img');
+            var nbJeton = 3;
 
             point.classList.add('div', 'point', 'index2');
             pointInt.classList.add('image', 'pointInt', 'index2');
             point6.classList.add('image', 'point6', 'index2');
+            position.classList.add('image');
             point6.src = 'image/plateau.png';
             pointInt.appendChild(point6);
 
-            //ajout du plateau de point à plus de 6 joueur
+            //ajout du plateau de point à moins de 6 joueurs
             if (nbPlayer < 6) {
               var point4 = document.createElement('img');
+              nbJeton = 2;
               point4.classList.add('image', 'point4', 'index2');
               point4.src = 'image/plateau.png';
               pointInt.appendChild(point4);
             }
             point.appendChild(pointInt);
             //parcour la liste des joueurs pour afficher leur points
-            for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
-              if (playerListe[numJoueur].joue != 'fantom') {
+            playerListe.forEach (function(joueur, numJoueur, array) {
+              positionJeton[numJoueur] = document.createElement('div');
+              if (joueur && (joueur.joue != 'fantom') ) {
                 createPoint(numJoueur, point);
+                for (var i = 0; i < nbJeton; i++) {
+                  jetonIntuition(numJoueur, 'ok', joueur.joue, positionJeton[numJoueur]);
+                  jetonIntuition(numJoueur, 'nok', joueur.joue, positionJeton[numJoueur]);
+                }
+                positionJeton[numJoueur].classList.add('image');
+                positionJeton[numJoueur].style.top = '-20px';
+                document.getElementById(numJoueur).parentNode.appendChild(positionJeton[numJoueur]);
               }
-            }
+            });
           }
-          jeux.appendChild(div);
           //place les pions intuition
           for (var numJoueur = 1; numJoueur <= nbPlayer; numJoueur++) {
             if (playerListe[numJoueur].joue != 'fantom') {
@@ -955,6 +972,23 @@
       if ( (nbPlayer > 3) && (numPlayer != numJoueur) ) {
         contextmenu(intuition, [0, 1], numJoueur);
       }
+    };
+
+    //créé les jetons intuition
+    function jetonIntuition (numJoueur, type, joue, div) {
+      if (!playerInfo[numJoueur]) {
+        playerInfo[numJoueur] = {};
+      }
+      if (!playerInfo[numJoueur]['jeton' + type]) {
+        playerInfo[numJoueur]['jeton' + type] = [];
+      }
+      var jeton = document.createElement('div');
+      playerInfo[numJoueur]['jeton' + type].push(document.createElement('div'));
+      jeton.classList.add(type + jetonPoint[joue].couleur);
+      playerInfo[numJoueur]['jeton' + type][ playerInfo[numJoueur]['jeton' + type].length - 1 ].classList.add('intuition' + jetonPoint[joue].couleur, 'intuition');
+      playerInfo[numJoueur]['jeton' + type][ playerInfo[numJoueur]['jeton' + type].length - 1 ].appendChild(jeton);
+      //ajout dans le DOM
+      div.appendChild(playerInfo[numJoueur]['jeton' + type][ playerInfo[numJoueur]['jeton' + type].length - 1 ]);
     };
 
     //affichage des cartes des joueur pour le fantom
@@ -1293,21 +1327,25 @@
       if ( (numJoueur != numPlayer) && (playerListe[numPlayer].nbJetonOK > 0) ) {
         //si il a déjà voté lui rend ses point de vote
         if (playerListe[numJoueur].vote[numPlayer] === false) {
-          playerListe[numPlayer].nbJetonNOK++;
-        }
-        //décrémente ses point de vote et ajoute son vote
-        playerListe[numPlayer].nbJetonOK--;
-        playerListe[numJoueur].vote[numPlayer] = true;
-        socket.emit('vote', {numPlayer: numPlayer, ok: true, votePour: numJoueur, room: room});
+          addChat('vous avez déjà voter. annulé votre vote avent de voter de nouveau', 20000);
+        } else {
+          if (!playerInfo[numJoueur].vote) {
+            playerInfo[numJoueur].vote = [];
+          }
+          playerInfo[numJoueur].vote[numPlayer] = {};
+          //décrémente ses point de vote et ajoute son vote
+          playerListe[numPlayer].nbJetonOK--;
+          playerInfo[numJoueur].vote[numPlayer].indice = playerListe[numPlayer].nbJetonOK;
+          playerListe[numJoueur].vote[numPlayer] = true;
+          socket.emit('vote', {numPlayer: numPlayer, ok: true, votePour: numJoueur, room: room, indice: playerListe[numPlayer].nbJetonOK});
 
-        //ajoute du jeton intuition
-        var jeton = document.createElement('div');
-        var div = document.createElement('div');
-        jeton.classList.add('ok' + jetonPoint[perso].couleur);
-        div.classList.add('intuition' + jetonPoint[perso].couleur);
-        div.appendChild(jeton);
-        playerInfo[numJoueur].intuition.insertBefore(div, playerInfo[numJoueur].intuition.children[0]);
-        contextmenu(div, [8], numJoueur, div);
+          //ajoute du jeton intuition
+          console.log(playerListe[numPlayer].nbJetonOK);
+          console.log(playerInfo[numPlayer]['jetonok']);
+          playerInfo[numJoueur].intuition.insertBefore( playerInfo[numPlayer]['jetonok'][ playerListe[numPlayer].nbJetonOK ], playerInfo[numJoueur].intuition.children[0]);
+          playerInfo[numPlayer]['jetonnok'][ playerInfo[numJoueur].vote[numPlayer].indice ].classList.remove('intuition');
+          contextmenu(playerInfo[numPlayer]['jetonok'][ playerListe[numPlayer].nbJetonOK ], [8], numJoueur);
+        }
       } else {
         addChat('vous ne pouvez pas voter', 20000);
       }
@@ -1320,23 +1358,27 @@
       }
       //vérifie que le joueur ne vote pas pour lui et qu'il peut voter
       if ( (numJoueur != numPlayer) && (playerListe[numPlayer].nbJetonNOK > 0) ) {
-        //si il a déjà voté lui rend ses point de vote
+        //Vérifie si il a déjà voté
         if (playerListe[numJoueur].vote[numPlayer] === true) {
-          playerListe[numPlayer].nbJetonOK++;
-        }
-        //décrémente ses point de vote et ajoute son vote
-        playerListe[numPlayer].nbJetonNOK--;
-        playerListe[numJoueur].vote[numPlayer] = false;
-        socket.emit('vote', {numPlayer: numPlayer, ok: false, votePour: numJoueur, room: room});
+          addChat('vous avez déjà voter. annulé votre vote avent de voter de nouveau', 20000);
+        } else {
+          if (!playerInfo[numJoueur].vote) {
+            playerInfo[numJoueur].vote = [];
+          }
+          playerInfo[numJoueur].vote[numPlayer] = {};
+          //décrémente ses point de vote et ajoute son vote
+          playerListe[numPlayer].nbJetonNOK--;
+          playerInfo[numJoueur].vote[numPlayer].indice = playerListe[numPlayer].nbJetonNOK;
+          playerListe[numJoueur].vote[numPlayer] = false;
+          socket.emit('vote', {numPlayer: numPlayer, ok: false, votePour: numJoueur, room: room, indice: playerListe[numPlayer].nbJetonNOK});
 
-        //ajoute du jeton intuition
-        var jeton = document.createElement('div');
-        var div = document.createElement('div');
-        jeton.classList.add('nok' + jetonPoint[perso].couleur);
-        div.classList.add('intuition' + jetonPoint[perso].couleur);
-        div.appendChild(jeton);
-        playerInfo[numJoueur].intuition.insertBefore(div, playerInfo[numJoueur].intuition.children[0]);
-        contextmenu(div, [8], numJoueur, div);
+          //ajoute du jeton intuition
+          console.log(playerListe[numPlayer].nbJetonNOK);
+          console.log(playerInfo[numPlayer]['jetonnok']);
+          playerInfo[numJoueur].intuition.insertBefore(playerInfo[numPlayer]['jetonnok'][ playerListe[numPlayer].nbJetonNOK ], playerInfo[numJoueur].intuition.children[0]);
+          playerInfo[numPlayer]['jetonnok'][ playerInfo[numJoueur].vote[numPlayer].indice ].classList.remove('intuition');
+          contextmenu(playerInfo[numPlayer]['jetonok'][ playerListe[numPlayer].nbJetonNOK ], [8], numJoueur);
+        }
       } else {
         addChat('vous ne pouvez pas voter', 20000);
       }
@@ -1349,15 +1391,16 @@
         //rajoute ses jeton de vote
         if (playerListe[numJoueur].vote[numPlayer]) {
           playerListe[numPlayer].nbJetonOK++;
+          positionJeton[numPlayer].appendChild(playerInfo[numPlayer]['jetonok'][ playerInfo[numJoueur].vote[numPlayer].indice ]);
+          playerInfo[numPlayer]['jetonnok'][ playerInfo[numJoueur].vote[numPlayer].indice ].classList.add('intuition');
         } else {
           playerListe[numPlayer].nbJetonNOK++;
+          positionJeton[numPlayer].appendChild(playerInfo[numPlayer]['jetonnok'][ playerInfo[numJoueur].vote[numPlayer].indice ]);
+          playerInfo[numPlayer]['jetonnok'][ playerInfo[numJoueur].vote[numPlayer].indice ].classList.add('intuition');
         }
         //annule le vote
         playerListe[numJoueur].vote[numPlayer] = undefined;
-        socket.emit('vote', {numPlayer: numPlayer, votePour: numJoueur, room: room});
-
-        //suppression du jeton intuition
-        element.parentNode.removeChild(element);
+        socket.emit('vote', {numPlayer: numPlayer, votePour: numJoueur, room: room, indice: playerInfo[numJoueur].vote[numPlayer].indice});
       } else {
         addChat('vous n\'avez pas voté', 20000);
       }

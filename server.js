@@ -478,7 +478,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
         rooms[data.room].playerListe[data.votePour].vote[data.numPlayer] = undefined;
       }
     }
-
+    data.playerListe = rooms[data.room].playerListe;
     //enregistre le choix du joueur
     var partie = db.get().collection('partie');
     partie.updateOne({room:data.room}, { $set: { playerListe : rooms[data.room].playerListe } }, function(err,result){});
