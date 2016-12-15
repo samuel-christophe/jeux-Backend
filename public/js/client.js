@@ -11,8 +11,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    // var socket = io('http://192.168.1.30:8888/');
-    var socket = io('http://10.1.1.137:8888/');
+    var socket = io('http://192.168.1.30:8888/');
+    // var socket = io('http://10.1.1.137:8888/');
     // var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
@@ -80,6 +80,7 @@
       A chaque message reçu, on affiche les données
       obtenues dans la console du navigateur Internet.
       **/
+      console.log('je reçoit la connexion websocket');
       room = data.room;
       numPlayer = data.numPlayer;
       nbPlayer = data.nbPlayer;
@@ -113,6 +114,7 @@
 
       //vérifie si la partie à déjà commencé
       if (data.start) {
+        console.log('la partie à commencé');
         cartes = data.cartes;
         tour = data.tour;
         corbeau = data.corbeau;
@@ -1337,21 +1339,22 @@
     };
 
 
-    function OK(id, numJoueur)
-    {
+    function OK (id, numJoueur) {
       if (playerListe[numJoueur].vote == undefined) {
         playerListe[numJoueur].vote = [];
       }
       //vérifie que le joueur ne vote pas pour lui et qu'il peut voter
-      if ( (numJoueur != numPlayer) && (playerListe[numPlayer].nbJetonOK > 0) ) {
-        //si il a déjà voté lui rend ses point de vote
+      if (!playerInfo[numJoueur].vote) {
+        playerInfo[numJoueur].vote = [];
+      }
+      if (playerInfo[numJoueur].vote[numPlayer] !== false && playerInfo[numJoueur].vote[numPlayer] !== true) {
+        playerInfo[numJoueur].vote[numPlayer] = {};
+      }
+      if ( (numJoueur != numPlayer) && (playerListe[numPlayer].nbJetonOK > 0) && !playerInfo[numJoueur].vote[numPlayer] ) {
+        //si il a déjà voté lui rend ses points de vote
         if (playerListe[numJoueur].vote[numPlayer] === false) {
           addChat('vous avez déjà voter. annulé votre vote avent de voter de nouveau', 20000);
         } else {
-          if (!playerInfo[numJoueur].vote) {
-            playerInfo[numJoueur].vote = [];
-          }
-          playerInfo[numJoueur].vote[numPlayer] = {};
           //décrémente ses point de vote et ajoute son vote
           playerListe[numPlayer].nbJetonOK--;
           playerInfo[numJoueur].vote[numPlayer].indice = playerListe[numPlayer].nbJetonOK;
@@ -1376,15 +1379,17 @@
         playerListe[numJoueur].vote = [];
       }
       //vérifie que le joueur ne vote pas pour lui et qu'il peut voter
-      if ( (numJoueur != numPlayer) && (playerListe[numPlayer].nbJetonNOK > 0) ) {
+      if (!playerInfo[numJoueur].vote) {
+        playerInfo[numJoueur].vote = [];
+      }
+      if (playerInfo[numJoueur].vote[numPlayer] !== false && playerInfo[numJoueur].vote[numPlayer] !== true) {
+        playerInfo[numJoueur].vote[numPlayer] = {};
+      }
+      if ( (numJoueur != numPlayer) && (playerListe[numPlayer].nbJetonNOK > 0) && (playerInfo[numJoueur].vote[numPlayer] != false) ) {
         //Vérifie si il a déjà voté
         if (playerListe[numJoueur].vote[numPlayer] === true) {
           addChat('vous avez déjà voter. annulé votre vote avent de voter de nouveau', 20000);
         } else {
-          if (!playerInfo[numJoueur].vote) {
-            playerInfo[numJoueur].vote = [];
-          }
-          playerInfo[numJoueur].vote[numPlayer] = {};
           //décrémente ses point de vote et ajoute son vote
           playerListe[numPlayer].nbJetonNOK--;
           playerInfo[numJoueur].vote[numPlayer].indice = playerListe[numPlayer].nbJetonNOK;
