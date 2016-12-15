@@ -1480,22 +1480,26 @@
     //envoyer les vision au personnage
     function envoieVision(numJoueur)
     {
-      var verifiPresenceUneCarte = false;
-      choisCarte.vision.forEach(function (item, index, array) {
-        if (choisCarte.vision[index] != null) {
-          verifiPresenceUneCarte = true;
-        }
-      });
-      if ( verifiPresenceUneCarte ) {
-        if (!choisCarte.listesJoueur.includes(numJoueur.id)) {
-          choisCarte.listesJoueur.push(numJoueur.id);
-          socket.emit('send card', {numPlayer: numPlayer, perso: numJoueur.id, choisCarte: choisCarte, room: room});
-          choisCarte.vision = [];
+      if (playerListe[numJoueur.id].position < 4) {
+        var verifiPresenceUneCarte = false;
+        choisCarte.vision.forEach(function (item, index, array) {
+          if (choisCarte.vision[index] != null) {
+            verifiPresenceUneCarte = true;
+          }
+        });
+        if ( verifiPresenceUneCarte ) {
+          if (!choisCarte.listesJoueur.includes(numJoueur.id)) {
+            choisCarte.listesJoueur.push(numJoueur.id);
+            socket.emit('send card', {numPlayer: numPlayer, perso: numJoueur.id, choisCarte: choisCarte, room: room});
+            choisCarte.vision = [];
+          } else {
+            addChat('vous avez déjà envoyé des cartes vision au joueur: ' + numJoueur.id, 20000);
+          }
         } else {
-          addChat('vous avez déjà envoyé des cartes vision au joueur: ' + numJoueur.id, 20000);
+          addChat('Vous devez selectionner au moins une carte vision.', 20000);
         }
       } else {
-        addChat('Vous devez selectionner au moins une carte vision.', 20000);
+        addChat('Ce joueur à déjà trouvé toutes ses cartes.', 20000);
       }
     };
 
@@ -1533,10 +1537,17 @@
       element.parentNode.parentNode.classList.toggle('couper');
     };
 
-    //positionner le pion voyant
-    function intuitionPosition(element, num, numCartes)
+    //positionner le pion du voyant
+    function intuitionPosition(element, num)
     {
+      var position = idCartesSuspect[num];
+      console.log(position);
+      console.log(position.length);
+      var numCartes;
       if(playerListe[numPlayer].position == num) {
+        console.log(element.id);
+        console.log(element.id.substring(element.id.length - 1));
+        numCartes = element.id.substring(element.id.length - 1);
         playerInfo[numPlayer].intuitionPosition = numCartes;
         element.parentNode.insertBefore(playerInfo[numPlayer].intuition, element.parentNode.children[0]);
         socket.emit('position', {numPlayer: numPlayer, numCartes: numCartes, room: room});

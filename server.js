@@ -755,7 +755,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
     var partie = db.get().collection('partie');
     var users = db.get().collection('users');
     if ( rooms[data.room].playerListe[data.numPlayer].joue == 'fantom' && !rooms[data.room].endTour ) {
-      if ( !rooms[data.room].playerListe[data.perso].visionSend ) {
+      if ( !rooms[data.room].playerListe[data.perso].visionSend && rooms[data.room].playerListe[data.perso].position < 4 ) {
         //enregistre le numéro des cartes envoyé
         data.choisCarte.vision.forEach(function (item, index, array) {
           if (item) {
