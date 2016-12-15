@@ -187,18 +187,15 @@
           if (data.ok) {
             console.log('Je vote pour');
             playerInfo[data.votePour].intuition.insertBefore(playerInfo[data.numPlayer]['jetonok'][data.indice] , playerInfo[data.votePour].intuition.children[0]);
-            playerInfo[numPlayer]['jetonnok'][ data.indice ].classList.remove('intuition');
           } else {
             if (data.ok === false) {
               playerInfo[data.votePour].intuition.insertBefore(playerInfo[data.numPlayer]['jetonnok'][data.indice], playerInfo[data.votePour].intuition.children[0]);
-              playerInfo[numPlayer]['jetonnok'][ data.indice ].classList.remove('intuition');
             } else {
               if (playerInfo[data.numPlayer]['jetonok'][data.indice].parentNode == playerInfo[data.votePour].intuition ) {
                 playerInfo[data.votePour].intuition.removeChild(playerInfo[data.numPlayer]['jetonok'][data.indice]);
               } else {
                 playerInfo[data.votePour].intuition.removeChild(playerInfo[data.numPlayer]['jetonnok'][data.indice]);
               }
-              playerInfo[numPlayer]['jetonnok'][ data.indice ].classList.add('intuition');
             }
           }
         }
@@ -625,11 +622,9 @@
               for (var i = 0; i < nbJeton; i++) {
                 if (joueur.nbJetonOK <= i) {
                   plateau.appendChild(playerInfo[numPlayer]['jetonok'][ i ]);
-                  playerInfo[numPlayer]['jetonok'][ i ].classList.add('intuition');
                 }
                 if (joueur.nbJetonNOK > i) {
                   plateau.appendChild(playerInfo[numPlayer]['jetonnok'][ i ]);
-                  playerInfo[numPlayer]['jetonnok'][ i ].classList.add('intuition');
                 }
               }
             }
@@ -1400,7 +1395,6 @@
           console.log(playerListe[numPlayer].nbJetonNOK);
           console.log(playerInfo[numPlayer]['jetonnok']);
           playerInfo[numJoueur].intuition.insertBefore(playerInfo[numPlayer]['jetonnok'][ playerListe[numPlayer].nbJetonNOK ], playerInfo[numJoueur].intuition.children[0]);
-          playerInfo[numPlayer]['jetonnok'][ playerListe[numPlayer].nbJetonNOK ].classList.remove('intuition');
           contextmenu(playerInfo[numPlayer]['jetonok'][ playerListe[numPlayer].nbJetonNOK ], [8], numJoueur);
         }
       } else {
@@ -1416,11 +1410,9 @@
         if (playerListe[numJoueur].vote[numPlayer]) {
           playerListe[numPlayer].nbJetonOK++;
           positionJeton[numPlayer].appendChild(playerInfo[numPlayer]['jetonok'][ playerInfo[numJoueur].vote[numPlayer].indice ]);
-          playerInfo[numPlayer]['jetonnok'][ playerInfo[numJoueur].vote[numPlayer].indice ].classList.add('intuition');
         } else {
           playerListe[numPlayer].nbJetonNOK++;
           positionJeton[numPlayer].appendChild(playerInfo[numPlayer]['jetonnok'][ playerInfo[numJoueur].vote[numPlayer].indice ]);
-          playerInfo[numPlayer]['jetonnok'][ playerInfo[numJoueur].vote[numPlayer].indice ].classList.add('intuition');
         }
         //annule le vote
         playerListe[numJoueur].vote[numPlayer] = undefined;

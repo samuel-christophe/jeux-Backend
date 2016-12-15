@@ -546,7 +546,7 @@ table {
   left: 24px;
   z-index: 3;
 }
-.intuition{
+div.image div.intuition{
   transform: rotate(0deg);
   position: relative;
   float: left;
