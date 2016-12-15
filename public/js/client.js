@@ -11,8 +11,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    var socket = io('http://192.168.1.30:8888/');
-    // var socket = io('http://10.1.1.137:8888/');
+    // var socket = io('http://192.168.1.30:8888/');
+    var socket = io('http://10.1.1.137:8888/');
     // var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
@@ -180,7 +180,10 @@
       if (perso != 'fantom') {
         //ajoute du jeton intuition
         if (data.numPlayer != numPlayer) {
+          console.log(playerInfo[data.numPlayer]);
+          console.log(data.indice);
           if (data.ok) {
+            console.log('Je vote pour');
             playerInfo[data.votePour].intuition.insertBefore(playerInfo[data.numPlayer]['jetonok'][data.indice] , playerInfo[data.votePour].intuition.children[0]);
             playerInfo[numPlayer]['jetonnok'][ data.indice ].classList.remove('intuition');
           } else {
@@ -188,9 +191,6 @@
               playerInfo[data.votePour].intuition.insertBefore(playerInfo[data.numPlayer]['jetonnok'][data.indice], playerInfo[data.votePour].intuition.children[0]);
               playerInfo[numPlayer]['jetonnok'][ data.indice ].classList.remove('intuition');
             } else {
-              console.log(playerInfo[data.numPlayer]);
-              console.log(playerInfo[data.numPlayer]['jetonok']);
-              console.log(data.indice);
               if (playerInfo[data.numPlayer]['jetonok'][data.indice].parentNode == playerInfo[data.votePour].intuition ) {
                 playerInfo[data.votePour].intuition.removeChild(playerInfo[data.numPlayer]['jetonok'][data.indice]);
               } else {
@@ -619,14 +619,16 @@
               playerInfo[numJoueur].position = playerListe[numJoueur].position;
             }
             //vérifie les votes
-            if (playerListe[numJoueur].nbJetonOK) {
-              for (let i = (nbJeton - 1); playerListe[numJoueur].nbJetonOK <= i ; i--) {
-                plateau.appendChild(playerInfo[numPlayer]['jetonok'][ i ]);
-              }
-            }
-            if (playerListe[numJoueur].nbJetonNOK) {
-              for (let i = (nbJeton - 1); playerListe[numJoueur].nbJetonNOK <= i ; i--) {
-                plateau.appendChild(playerInfo[numPlayer]['jetonnok'][ i ]);
+            if (nbPlayer > 3) {
+              for (var i = 0; i < nbJeton; i++) {
+                if (joueur.nbJetonOK <= i) {
+                  plateau.appendChild(playerInfo[numPlayer]['jetonok'][ i ]);
+                  playerInfo[numPlayer]['jetonok'][ i ].classList.add('intuition');
+                }
+                if (joueur.nbJetonNOK > i) {
+                  plateau.appendChild(playerInfo[numPlayer]['jetonnok'][ i ]);
+                  playerInfo[numPlayer]['jetonnok'][ i ].classList.add('intuition');
+                }
               }
             }
             //déplace le pion intuition
@@ -912,7 +914,7 @@
             var point6 = document.createElement('img');
             nbJeton = 3;
 
-            point.classList.add('div', 'point', 'index2');
+            point.classList.add('point', 'index2');
             pointInt.classList.add('image', 'pointInt', 'index2');
             point6.classList.add('image', 'point6', 'index2');
             position.classList.add('image');
@@ -933,7 +935,7 @@
               positionJeton[numJoueur] = document.createElement('div');
               if (joueur && (joueur.joue != 'fantom') ) {
                 createPoint(numJoueur, point);
-                for (var i = 0; i < joueur.nbJetonOK; i++) {
+                for (var i = 0; i < nbJeton; i++) {
                   if (joueur.nbJetonOK > i) {
                     jetonIntuition(numJoueur, 'ok', joueur.joue, positionJeton[numJoueur]);
                   } else {
@@ -1393,7 +1395,7 @@
           console.log(playerListe[numPlayer].nbJetonNOK);
           console.log(playerInfo[numPlayer]['jetonnok']);
           playerInfo[numJoueur].intuition.insertBefore(playerInfo[numPlayer]['jetonnok'][ playerListe[numPlayer].nbJetonNOK ], playerInfo[numJoueur].intuition.children[0]);
-          playerInfo[numPlayer]['jetonnok'][ playerInfo[numJoueur].vote[numPlayer].indice ].classList.remove('intuition');
+          playerInfo[numPlayer]['jetonnok'][ playerListe[numPlayer].nbJetonNOK ].classList.remove('intuition');
           contextmenu(playerInfo[numPlayer]['jetonok'][ playerListe[numPlayer].nbJetonNOK ], [8], numJoueur);
         }
       } else {

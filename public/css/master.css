@@ -68,8 +68,10 @@ table {
   position: absolute;
 }
 .point{
+  position: absolute;
   height: 725px;
   width: 427px;
+  left: 1233px;
 }
 .padding{
   padding: 12px;
@@ -550,10 +552,47 @@ table {
   float: left;
   margin: 3px;
 }
+div.plateauIntuition div.intuition.intuitionblanc{
+  top: 29px;
+  left: 44px;
+  transform: rotate(61deg);
+  position: absolute;
+}
+div.plateauIntuition div.intuition.intuitionjaune{
+  top: 12px;
+  left: 18px;
+  transform: rotate(46deg);
+  position: absolute;
+}
+div.plateauIntuition div.intuition.intuitionmauve{
+  top: 9px;
+  left: 18px;
+  transform: rotate(182deg);
+  position: absolute;
+}
+div.plateauIntuition div.intuition.intuitionbleu{
+  top: 27px;
+  left: 25px;
+  transform: rotate(-145deg);
+  position: absolute;
+}
+div.plateauIntuition div.intuition.intuitionnoir{
+  top: 83px;
+  left: 15px;
+  transform: rotate(-125deg);
+  position: absolute;
+}
+div.plateauIntuition div.intuition.intuitionrouge{
+  top: 70px;
+  left: 13px;
+  transform: rotate(151deg);
+  position: absolute;
+}
 .plateauIntuition{
-  background: url('../image/plateau.png') no-repeat 0 30px;
-  width: 21px;
-  height: 30px;
+  background: url('../image/plateau.png') no-repeat -846px 0;
+  margin-left: 5px;
+	width: 67px;
+	height: 139px;
   position: relative;
   float: left;
   z-index: 3;
