@@ -40,14 +40,16 @@
   top: -412px;
 }
 .corbeauDivUn{
-  left: 750px;
+  left: 250px;
+  top: 247px;
   position: relative;
   float: left;
 	width: 265px;
 	height: 160px;
 }
 .corbeauDivDeux{
-  left: 530px;
+  left: 230px;
+  top: 247px;
   position: relative;
   float: left;
 	width: 209px;
@@ -55,6 +57,7 @@
 }
 .corbeauDivTrois{
   left: 270px;
+  top: 247px;
   position: relative;
   float: left;
 	width: 245px;

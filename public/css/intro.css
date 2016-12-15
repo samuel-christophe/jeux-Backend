@@ -18,7 +18,7 @@ ul li:nth-of-type(2n+1), li a{
   list-style: 0 ;
   position: absolute;
   top: 3%;
-  left: 60%;
+  left: 70%;
   z-index: 1;
 }
 #navigation li {
@@ -130,8 +130,8 @@ img.characterSix{
 .textAffiche{
   position: absolute;
   z-index: 1;
-  top: 998px;
-  left: 60%;
+  top: 789px;
+  left: 70%;
   margin-left: 3px;
   margin-top: 3px;
 }

@@ -688,7 +688,7 @@
 
       //si le joueur joue le fantom
       if (perso == 'fantom') {
-        navigation.style.top = '956px';
+        navigation.style.top = '753px';
         position.classList.remove('position');
         position.classList.add('div');
         position.appendChild(heure);
