@@ -11,8 +11,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    var socket = io('http://192.168.1.30:8888/');
-    // var socket = io('http://10.1.1.137:8888/');
+    // var socket = io('http://192.168.1.30:8888/');
+    var socket = io('http://10.1.1.137:8888/');
     // var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
@@ -186,15 +186,15 @@
           console.log(data.indice);
           if (data.ok) {
             console.log('Je vote pour');
-            playerInfo[data.votePour].intuition.insertBefore(playerInfo[data.numPlayer]['jetonok'][data.indice] , playerInfo[data.votePour].intuition.children[0]);
+            playerInfo[data.votePour].intuition.appendChild(playerInfo[data.numPlayer]['jetonok'][data.indice]);
           } else {
             if (data.ok === false) {
-              playerInfo[data.votePour].intuition.insertBefore(playerInfo[data.numPlayer]['jetonnok'][data.indice], playerInfo[data.votePour].intuition.children[0]);
+              playerInfo[data.votePour].intuition.appendChild(playerInfo[data.numPlayer]['jetonnok'][data.indice]);
             } else {
               if (playerInfo[data.numPlayer]['jetonok'][data.indice].parentNode == playerInfo[data.votePour].intuition ) {
-                playerInfo[data.votePour].intuition.removeChild(playerInfo[data.numPlayer]['jetonok'][data.indice]);
+                positionJeton[data.numPlayer].appendChild(playerInfo[data.numPlayer]['jetonok'][data.indice]);
               } else {
-                playerInfo[data.votePour].intuition.removeChild(playerInfo[data.numPlayer]['jetonnok'][data.indice]);
+                positionJeton[data.numPlayer].appendChild(playerInfo[data.numPlayer]['jetonnok'][data.indice]);
               }
             }
           }
@@ -250,8 +250,9 @@
             //déplace le pion intuition
             document.getElementById(numJoueur).appendChild(playerInfo[numJoueur].intuition);
             //vérifie les votes
-            for (var j = 0; playerInfo[numJoueur].intuition.children.length > 1 ; j++) {
-              playerInfo[numJoueur].intuition.removeChild(playerInfo[numJoueur].intuition.children[j]);
+            for (var j = 0; j > nbJeton ; j++) {
+              positionJeton[numJoueur].appendChild(playerInfo[numJoueur]['jetonok']);
+              positionJeton[numJoueur].appendChild(playerInfo[numJoueur]['jetonnok']);
             }
           }
         });
@@ -573,7 +574,6 @@
     };
 
     function endTurn() {
-      console.log(tour);
       //suppression des class
       aiguilleHeure.classList.remove(heureTour[tour - 1].div);
       aiguille.classList.remove(heureTour[tour - 1].img);
@@ -619,12 +619,16 @@
             }
             //vérifie les votes
             if (nbPlayer > 3) {
-              for (var i = 0; i < nbJeton; i++) {
+              for (var i = (nbJeton - 1); i < 0; i--) {
                 if (joueur.nbJetonOK <= i) {
-                  plateau.appendChild(playerInfo[numPlayer]['jetonok'][ i ]);
+                  plateau.appendChild(playerInfo[numJoueur]['jetonok'][ i ]);
+                } else {
+                  positionJeton[numJoueur].appendChild(playerInfo[numJoueur]['jetonok'][ i ]);
                 }
-                if (joueur.nbJetonNOK > i) {
-                  plateau.appendChild(playerInfo[numPlayer]['jetonnok'][ i ]);
+                if (joueur.nbJetonNOK <= i) {
+                  plateau.appendChild(playerInfo[numJoueur]['jetonnok'][ i ]);
+                } else {
+                  positionJeton[numJoueur].appendChild(playerInfo[numJoueur]['jetonnok'][ i ]);
                 }
               }
             }
@@ -1540,9 +1544,12 @@
     //positionner le pion du voyant
     function intuitionPosition(element, num)
     {
+      console.log('je change de position');
       var position = idCartesSuspect[num];
       var numCartes;
       if(playerListe[numPlayer].position == num) {
+        numCartes = element.id.substring(element.id.length - 1);
+        console.log(numCartes);
         playerInfo[numPlayer].intuitionPosition = numCartes;
         element.parentNode.insertBefore(playerInfo[numPlayer].intuition, element.parentNode.children[0]);
         socket.emit('position', {numPlayer: numPlayer, numCartes: numCartes, room: room});

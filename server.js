@@ -234,6 +234,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
               }
             }
           }
+          console.log(playerListe);
           //parcour la liste des joueurs pour envoyer les cartes vision
           for (var i = 1; i <= rooms[room].nbPlayer; i++) {
             if (playerListe[i].vision != undefined) {
@@ -825,7 +826,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
                     rooms[data.room].playerListe[numeroJoueur].find = {};
                   }
                   rooms[data.room].playerListe[numeroJoueur].find[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]] = rooms[data.room].playerListe[numeroJoueur].positionCartes;
-                  rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabVoyant.splice( rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabVoyant.indexOf(rooms[data.room].playerListe[numeroJoueur].positionCartes), 1);
+                  //rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabVoyant.splice( rooms[data.room].listesCartes[positionPlateau[rooms[data.room].playerListe[numeroJoueur].position]].tabVoyant.indexOf(rooms[data.room].playerListe[numeroJoueur].positionCartes), 1);
                   rooms[data.room].playerListe[numeroJoueur].positionCartes = undefined;
                   rooms[data.room].playerListe[numeroJoueur].position++;
                   //ajoute les point pour avoir trouvé toutes les cates
