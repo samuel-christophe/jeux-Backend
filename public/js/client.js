@@ -1345,7 +1345,7 @@
       if (playerInfo[numJoueur].vote[numPlayer] !== false && playerInfo[numJoueur].vote[numPlayer] !== true) {
         playerInfo[numJoueur].vote[numPlayer] = {};
       }
-      if ( (numJoueur != numPlayer) && (playerListe[numPlayer].nbJetonOK > 0) && !playerInfo[numJoueur].vote[numPlayer] ) {
+      if ( (numJoueur != numPlayer) && (playerListe[numPlayer].nbJetonOK > 0) && playerInfo[numJoueur].vote[numPlayer] !== true ) {
         //si il a déjà voté lui rend ses points de vote
         if (playerListe[numJoueur].vote[numPlayer] === false) {
           addChat('vous avez déjà voter. annulé votre vote avent de voter de nouveau', 20000);
@@ -1541,13 +1541,8 @@
     function intuitionPosition(element, num)
     {
       var position = idCartesSuspect[num];
-      console.log(position);
-      console.log(position.length);
       var numCartes;
       if(playerListe[numPlayer].position == num) {
-        console.log(element.id);
-        console.log(element.id.substring(element.id.length - 1));
-        numCartes = element.id.substring(element.id.length - 1);
         playerInfo[numPlayer].intuitionPosition = numCartes;
         element.parentNode.insertBefore(playerInfo[numPlayer].intuition, element.parentNode.children[0]);
         socket.emit('position', {numPlayer: numPlayer, numCartes: numCartes, room: room});
