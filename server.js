@@ -601,12 +601,15 @@ socketIOWebSocketServer.on('connection', (socket) => {
         });
       } else {
         //trouver qui à voté pour ces suspects et comparer leurs points
+        console.log('égalité des votes');
         rooms[data.room].playerListe.forEach(function(item, index, array){
+          console.log('boucle les joueurs pour vérifier leurs points');
           if (item && item.choixCoupable && coupable.includes(item.choixCoupable) ) {
-            console.log(coupable);
-            console.log(item.choixCoupable);
+            console.log('Coupable: ' + coupable);
+            console.log('Choix du joueur: ' + item.choixCoupable);
             //le nombre de point est supérieur
             if ( item.nbPoint > nbPoint ) {
+              console.log('Le joueur à plus de point');
               //réinitialise les tableau
               if (indice > 0) {
                 execo = [];

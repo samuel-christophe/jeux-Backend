@@ -1434,6 +1434,7 @@
         console.log('envoie de la vision');
         if ( (choisCoupable.vision[0] !== choisCoupable.vision[1]) && (choisCoupable.vision[0] !== choisCoupable.vision[2]) && (choisCoupable.vision[1] !== choisCoupable.vision[2]) ) {
           socket.emit('final vision', {numPlayer: numPlayer, perso: choisCoupable.perso, vision: choisCoupable.vision, room: room});
+          addChat('Les cartes ont été envoyé.', 20000);
         } else {
           addChat('Vous devez selectionner des cartes vision différentes.', 20000);
         }
