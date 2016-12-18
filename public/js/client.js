@@ -1517,7 +1517,7 @@
     //supprimer une carte vision
     function supVision(e, numVision)
     {
-      if (choisCarte[numVision] != null) {
+      if (!choisCarte[numVision]) {
         choisCarte.vision[numVision] = null;
       } else {
         addChat('Cette carte n\'a pas été selectionnée', 20000);
