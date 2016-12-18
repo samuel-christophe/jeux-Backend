@@ -1060,8 +1060,10 @@ db.connect(url, function(err) {
       };
     });
     //affiche les partie fini
-    partie.find({"gagner":true}, {_id: 0}).toArray(function(err, data) {
+    partie.find({"gagner":{$exists:true}}, {_id: 0}).toArray(function(err, data) {
+      console.log('récupération des parties fini');
       for (var i = 0; i < data.length; i++) {
+        console.log('affichage des partie fini.');
         console.log(data[i]);
       };
     });

@@ -11,8 +11,8 @@
       WebSocket à l'aide de la fonction io fournie par le "framework"
       client socket.io.
     **/
-    // var socket = io('http://192.168.1.30:8888/');
-    var socket = io('http://10.1.1.137:8888/');
+    var socket = io('http://192.168.1.30:8888/');
+    // var socket = io('http://10.1.1.137:8888/');
     // var socket = io('http://www.samuelchristophe.com:8888/');
 
     // socket : Est un objet qui représente la connexion WebSocket établie entre le client WebSocket et le serveur WebSocket.
@@ -304,7 +304,7 @@
         if (!data.fantom) {
           //si le joueur à envoyé le message
           if ((data.numPlayer == numPlayer)) {
-            if (data.perso == 'fantom' || nbPlayer > 3) {
+            if (data.perso == 'fantom') {
               //parcour la liste des liens pour les supprimer
               for (var i = 1; i < HTMLaElement.length; i) {
                 status = HTMLaElement[i].getAttribute('href');
@@ -1430,8 +1430,9 @@
     function sendVision(perso)
     {
       console.log(choisCoupable.vision);
-      if ( choisCoupable.vision[0] && choisCoupable.vision[1] && choisCoupable.vision[2] ) {
-        if ( (choisCoupable.vision[0] != choisCoupable.vision[1]) && (choisCoupable.vision[0] != choisCoupable.vision[2]) && (choisCoupable.vision[1] != choisCoupable.vision[2]) ) {
+      if ( choisCoupable.vision[0] != undefined && choisCoupable.vision[1] != undefined && choisCoupable.vision[2] != undefined ) {
+        console.log('envoie de la vision');
+        if ( (choisCoupable.vision[0] !== choisCoupable.vision[1]) && (choisCoupable.vision[0] !== choisCoupable.vision[2]) && (choisCoupable.vision[1] !== choisCoupable.vision[2]) ) {
           socket.emit('final vision', {numPlayer: numPlayer, perso: choisCoupable.perso, vision: choisCoupable.vision, room: room});
         } else {
           addChat('Vous devez selectionner des cartes vision différentes.', 20000);
