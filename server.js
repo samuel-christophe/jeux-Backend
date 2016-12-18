@@ -932,6 +932,7 @@ socketIOWebSocketServer.on('connection', (socket) => {
     // Connection collection
     var partie = db.get().collection('partie');
     var users = db.get().collection('users');
+    vars cards = {};
 
     //vérifie que tous les joueurs on selectionné un personnage, qu'il y en a au moins 2
     if (rooms[data.room].nbPlayer > 1) {
