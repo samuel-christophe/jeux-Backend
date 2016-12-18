@@ -619,7 +619,7 @@
             }
             //vérifie les votes
             if (nbPlayer > 3) {
-              for (var i = (nbJeton - 1); i < 0; i--) {
+              for (var i = (nbJeton - 1); i >= 0; i--) {
                 if (joueur.nbJetonOK <= i) {
                   plateau.appendChild(playerInfo[numJoueur]['jetonok'][ i ]);
                 } else {
