@@ -604,6 +604,10 @@ socketIOWebSocketServer.on('connection', (socket) => {
         console.log('égalité des votes');
         rooms[data.room].playerListe.forEach(function(item, index, array){
           console.log('boucle les joueurs pour vérifier leurs points');
+          console.log(item);
+          console.log(item.choixCoupable);
+          console.log(coupable);
+          console.log(coupable.includes(item.choixCoupable));
           if (item && item.choixCoupable && coupable.includes(item.choixCoupable) ) {
             console.log('Coupable: ' + coupable);
             console.log('Choix du joueur: ' + item.choixCoupable);
